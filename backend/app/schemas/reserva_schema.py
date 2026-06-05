@@ -1,0 +1,128 @@
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List
+from datetime import date, datetime
+
+
+class PaqueteCreate(BaseModel):
+    nombre_paquete: str = Field(..., min_length=1, max_length=100)
+    descripcion: Optional[str] = None
+    duracion_dias: Optional[int] = Field(None, gt=0)
+    precio_base: float = Field(..., ge=0)
+    activo: bool = True
+
+
+class PaqueteUpdate(BaseModel):
+    nombre_paquete: Optional[str] = None
+    descripcion: Optional[str] = None
+    duracion_dias: Optional[int] = Field(None, gt=0)
+    precio_base: Optional[float] = Field(None, ge=0)
+    activo: Optional[bool] = None
+
+
+class PaqueteResponse(BaseModel):
+    id_paquete: int
+    nombre_paquete: str
+    descripcion: Optional[str]
+    duracion_dias: Optional[int]
+    precio_base: float
+    activo: bool
+
+    class Config:
+        from_attributes = True
+
+
+class MetodoPagoCreate(BaseModel):
+    nombre_metodo: str = Field(..., min_length=1, max_length=50)
+
+
+class MetodoPagoResponse(BaseModel):
+    id_metodo: int
+    nombre_metodo: str
+
+    class Config:
+        from_attributes = True
+
+
+class ReservaCreate(BaseModel):
+    id_cliente: int
+    id_empleado: Optional[int] = None
+    id_paquete: Optional[int] = None
+    fecha_inicio: date
+    fecha_fin: date
+    numero_personas: int = Field(..., gt=0)
+
+    @field_validator("fecha_fin")
+    @classmethod
+    def validate_fechas(cls, v, info):
+        if "fecha_inicio" in info.data and v <= info.data["fecha_inicio"]:
+            raise ValueError("fecha_fin debe ser posterior a fecha_inicio")
+        return v
+
+
+class ReservaUpdate(BaseModel):
+    id_paquete: Optional[int] = None
+    fecha_inicio: Optional[date] = None
+    fecha_fin: Optional[date] = None
+    numero_personas: Optional[int] = Field(None, gt=0)
+    estado: Optional[str] = None
+
+    @field_validator("estado")
+    @classmethod
+    def validate_estado(cls, v):
+        if v and v not in ["pendiente", "confirmada", "cancelada", "finalizada"]:
+            raise ValueError("estado debe ser: pendiente, confirmada, cancelada o finalizada")
+        return v
+
+
+class ReservaResponse(BaseModel):
+    id_reserva: int
+    id_cliente: int
+    id_empleado: Optional[int]
+    id_paquete: Optional[int]
+    fecha_reserva: datetime
+    fecha_inicio: date
+    fecha_fin: date
+    numero_personas: int
+    estado: str
+
+    class Config:
+        from_attributes = True
+
+
+class PagoCreate(BaseModel):
+    id_reserva: int
+    id_metodo_pago: int
+    monto: float = Field(..., ge=0)
+    referencia: Optional[str] = Field(None, max_length=100)
+
+
+class PagoUpdate(BaseModel):
+    monto: Optional[float] = Field(None, ge=0)
+    referencia: Optional[str] = None
+    estado: Optional[str] = None
+
+    @field_validator("estado")
+    @classmethod
+    def validate_estado(cls, v):
+        if v and v not in ["pendiente", "pagado", "rechazado"]:
+            raise ValueError("estado debe ser: pendiente, pagado o rechazado")
+        return v
+
+
+class PagoResponse(BaseModel):
+    id_pago: int
+    id_reserva: int
+    id_metodo_pago: int
+    monto: float
+    fecha_pago: datetime
+    referencia: Optional[str]
+    estado: str
+    metodo_pago: Optional[MetodoPagoResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ReservaDetailResponse(ReservaResponse):
+    paquete: Optional[PaqueteResponse] = None
+    pagos: List[PagoResponse] = []

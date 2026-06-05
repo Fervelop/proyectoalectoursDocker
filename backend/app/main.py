@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from app.routes.auth_route import router as auth_router
+from app.routes.hotel_route import router as hotel_router
+from app.routes.cliente_route import router as cliente_router
+from app.routes.reserva_route import router as reserva_router
 
 # ============================================================================
 # CONFIGURACIÓN LOGGING
@@ -57,6 +60,9 @@ async def log_requests(request, call_next):
 # ============================================================================
 
 app.include_router(auth_router)
+app.include_router(hotel_router)
+app.include_router(cliente_router)
+app.include_router(reserva_router)
 
 # ============================================================================
 # ENDPOINTS

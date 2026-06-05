@@ -27,3 +27,8 @@ def get_db():
 
     finally:
         db.close()
+
+
+# Importar todos los modelos DESPUÉS de crear Base
+# Esto es necesario para que SQLAlchemy registre todas las tablas
+from app.models import *
