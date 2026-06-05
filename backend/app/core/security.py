@@ -168,3 +168,58 @@ def generate_token_pair(user_id: int) -> dict:
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
+
+
+def create_verification_token(email: str) -> str:
+    """
+    Crea un token de verificación de email.
+    
+    Args:
+        email: Email del usuario
+        
+    Returns:
+        Token de verificación válido por 24 horas
+    """
+    to_encode = {
+        "email": email,
+        "type": "verification"
+    }
+    
+    # Token válido por 24 horas
+    expire = datetime.now(timezone.utc) + timedelta(hours=24)
+    to_encode.update({"exp": expire})
+    
+    encoded_jwt = jwt.encode(
+        to_encode,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM
+    )
+    
+    return encoded_jwt
+
+
+def verify_verification_token(token: str) -> Optional[str]:
+    """
+    Verifica un token de verificación de email.
+    
+    Args:
+        token: Token de verificación
+        
+    Returns:
+        Email si el token es válido, None si es inválido o expirado
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
+        
+        # Verificar que es un token de verificación
+        if payload.get("type") != "verification":
+            return None
+            
+        email = payload.get("email")
+        return email
+    except JWTError:
+        return None

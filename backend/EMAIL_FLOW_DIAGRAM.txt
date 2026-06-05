@@ -1,0 +1,286 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    🔐 FLUJO DE VERIFICACIÓN DE EMAIL
+═══════════════════════════════════════════════════════════════════════════════
+
+
+ESCENARIO 1: USUARIO NUEVO
+─────────────────────────────────────────────────────────────────────────────
+
+    [USUARIO]                                    [BACKEND]        [BASE DATOS]
+        │                                             │                  │
+        │──── POST /register ────────────────────────>│                  │
+        │    {username, email, password}              │                  │
+        │                                             │── Insert ───────>│
+        │                                             │    usuario       │
+        │                                             │    verificado=F  │
+        │                                             │                  │
+        │                                             │─ Generar Token ─┐
+        │                                             │                 │
+        │                                    ┌────────────────────────┘
+        │                                    │
+        │                              [EmailService]
+        │                                    │
+        │                         SMTP──────>│
+        │                         (Mailpit)  │
+        │                                    │
+        │<────────────────────── Email HTML ─┴─────┐
+        │         {Botón Verificar + Token}        │
+        │                                          │
+        │                                  [MAILPIT UI]
+        │                              http://localhost:8025
+        │                                  (Ver emails)
+        │
+        ├─→ Email en la bandeja
+        │   Clic en botón "Verificar"
+        │   ó copia token
+        │
+        │──── POST /verify-email ────────────────────>│
+        │    ?token=eyJhbGc...                        │
+        │                                             │── Update ───────>│
+        │                                             │    verificado=T  │
+        │                                             │                  │
+        │<──── {message: "Verificado"} ──────────────│                  │
+        │                                             │
+        │───── POST /login ──────────────────────────>│
+        │    {username, password}                     │
+        │                                             │── Check ────────>│
+        │                                             │  verificado=T    │
+        │                                             │                  │
+        │                                    ✅ Validación Exitosa
+        │                                             │
+        │<──── {access_token, refresh_token} ───────│
+        │                                             │
+        ├─→ Token guardado (localStorage, cookie)
+        │
+        └──── GET /api/recursos ────────────────────>│
+             {Authorization: Bearer token}           │
+                                              ✅ ACCESO CONCEDIDO
+
+
+ESCENARIO 2: USUARIO INTENTA LOGIN SIN VERIFICAR
+─────────────────────────────────────────────────────────────────────────────
+
+    [USUARIO]                                    [BACKEND]        [BASE DATOS]
+        │                                             │                  │
+        │──── POST /login ───────────────────────────>│                  │
+        │    {username, password}                     │── Check ────────>│
+        │                                             │  verificado=F    │
+        │                                             │                  │
+        │                                    ❌ Validación Falla
+        │                                             │
+        │<──── 403 Forbidden ────────────────────────│
+        │    {detail: "Verifica tu email"}            │
+        │
+
+
+ESCENARIO 3: TOKEN EXPIRADO (> 24h)
+─────────────────────────────────────────────────────────────────────────────
+
+    [USUARIO]                                    [BACKEND]
+        │                                             │
+        │──── POST /verify-email ────────────────────>│
+        │    ?token=expired_token                     │
+        │                                             │── Decodificar ──┐
+        │                                             │                 │
+        │                                    ❌ Token Expirado
+        │                                             │
+        │<──── 400 Bad Request ──────────────────────│
+        │    {detail: "Token inválido o expirado"}    │
+        │
+        │ Solución: Registrarse de nuevo
+
+
+FLUJO DE TOKENS
+─────────────────────────────────────────────────────────────────────────────
+
+Registro (POST /register):
+┌──────────────────────────────────────────┐
+│ Response                                 │
+├──────────────────────────────────────────┤
+│ {                                        │
+│   "user_id": 1,                          │
+│   "email": "user@test.com",              │
+│   "verification_token": "eyJhbGc..."     │  ← Copiar esto
+│   "message": "Revisa tu correo..."       │
+│ }                                        │
+└──────────────────────────────────────────┘
+
+Verificar (POST /verify-email?token=...):
+┌──────────────────────────────────────────┐
+│ Response                                 │
+├──────────────────────────────────────────┤
+│ {                                        │
+│   "message": "Email verificado",         │
+│   "email": "user@test.com",              │
+│   "user_id": 1                           │
+│ }                                        │
+└──────────────────────────────────────────┘
+
+Login (POST /login):
+┌──────────────────────────────────────────┐
+│ Response                                 │
+├──────────────────────────────────────────┤
+│ {                                        │
+│   "access_token": "eyJhbGc...",          │  ← Usar en Headers
+│   "refresh_token": "eyJhbGc...",         │
+│   "token_type": "bearer"                 │
+│ }                                        │
+└──────────────────────────────────────────┘
+
+
+ESTRUCTURA DE TOKENS JWT
+─────────────────────────────────────────────────────────────────────────────
+
+Verification Token (24 horas):
+┌─────────────────────────────────────────┐
+│ Header:    {alg: HS256, typ: JWT}       │
+├─────────────────────────────────────────┤
+│ Payload:   {                            │
+│              email: "user@test.com",    │
+│              type: "verification",     │
+│              exp: 1718XXXXXX            │
+│            }                            │
+├─────────────────────────────────────────┤
+│ Signature: HMACSHA256(header.payload)  │
+└─────────────────────────────────────────┘
+
+Access Token (30 minutos):
+┌─────────────────────────────────────────┐
+│ Header:    {alg: HS256, typ: JWT}       │
+├─────────────────────────────────────────┤
+│ Payload:   {                            │
+│              sub: "1",                 │
+│              exp: 1718XXXXXX            │
+│            }                            │
+├─────────────────────────────────────────┤
+│ Signature: HMACSHA256(header.payload)  │
+└─────────────────────────────────────────┘
+
+
+VALIDACIONES EN BD
+─────────────────────────────────────────────────────────────────────────────
+
+Tabla: usuarios
+
+┌─────────────┬──────────┬────────────┬──────────────────┐
+│ id_usuario  │ username │ verificado │ acciones         │
+├─────────────┼──────────┼────────────┼──────────────────┤
+│ 1           │ juan     │ FALSE      │ ❌ No puede login │
+│             │          │            │ ✓ Puede verificar│
+├─────────────┼──────────┼────────────┼──────────────────┤
+│ 2           │ maria    │ TRUE       │ ✓ Puede login    │
+│             │          │            │ ✓ Acceso total   │
+└─────────────┴──────────┴────────────┴──────────────────┘
+
+
+ENDPOINTS DISPONIBLES
+─────────────────────────────────────────────────────────────────────────────
+
+POST /auth/register
+├─ Input:  {username, email, password}
+├─ Output: {user_id, verification_token, email}
+├─ Status: 201 Created
+├─ Acción: Crea usuario + Envía email
+└─ Errores: 400 (username/email duplicados)
+
+POST /auth/verify-email?token=...
+├─ Input:  token (query param)
+├─ Output: {message, email, user_id}
+├─ Status: 200 OK
+├─ Acción: Marca email como verificado
+└─ Errores: 400 (token inválido/expirado)
+
+POST /auth/login
+├─ Input:  {username, password}
+├─ Output: {access_token, refresh_token, token_type}
+├─ Status: 200 OK
+├─ Acción: Genera tokens JWT
+├─ Errores: 401 (credenciales inválidas)
+└─ Errores: 403 (email no verificado)
+
+
+ARCHIVOS IMPLICADOS
+─────────────────────────────────────────────────────────────────────────────
+
+app/models/user_model.py
+  └─ verificado: Boolean = False
+
+app/core/security.py
+  ├─ create_verification_token(email)
+  └─ verify_verification_token(token)
+
+app/core/mail.py
+  └─ send_verification_email(email, token)
+
+app/services/auth_service.py
+  ├─ register_user() → Crea token y retorna
+  ├─ verify_user_email() → Actualiza BD
+  └─ login_user() → Valida verificado
+
+app/routes/auth_route.py
+  ├─ POST /register → async + email
+  ├─ POST /login → valida verificado
+  └─ POST /verify-email → nuevo
+
+test_email_verification.py
+  └─ Test automático completo
+
+
+TIMELINE DE VALIDEZ
+─────────────────────────────────────────────────────────────────────────────
+
+Momento                     Token                Acción
+────────────────────────────────────────────────────────────────────────────
+00:00  Registro            ✅ Válido            Email enviado
+                           24h timeout=00:00
+
+12:00  Después de 12h      ✅ Válido            Puede verificar
+23:59  Casi a las 24h      ✅ Válido (último)   Justo antes de expirar
+00:01  Después de 24h      ❌ EXPIRADO         Debe registrarse de nuevo
+
+
+CASOS DE USO
+─────────────────────────────────────────────────────────────────────────────
+
+[Caso 1] Usuario Nuevo
+────────────────────────
+1. Registrarse en web
+2. Recibe email en bandeja
+3. Clic en botón
+4. ✓ Email verificado
+5. Inicia sesión
+6. ✓ Acceso concedido
+
+[Caso 2] Olvida Verificar
+─────────────────────────
+1. Registrarse en web
+2. Cierra navegador
+3. Intenta login después
+4. ❌ "Verifica tu email"
+5. Abre bandeja
+6. Clic en botón
+7. Reintenta login
+8. ✓ Acceso concedido
+
+[Caso 3] Spam Filter
+───────────────────
+1. Registrarse en web
+2. Email en spam
+3. Busca en spam
+4. Clic en botón
+5. ✓ Email verificado
+6. Inicia sesión
+7. ✓ Acceso concedido
+
+[Caso 4] Token Expirado
+──────────────────────
+1. Registrarse en web
+2. Espera 25+ horas
+3. Clic en botón email
+4. ❌ "Token expirado"
+5. Debe registrarse de nuevo
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                         ✅ IMPLEMENTACIÓN COMPLETA
+═══════════════════════════════════════════════════════════════════════════════

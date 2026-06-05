@@ -1,29 +1,13 @@
 """
-Módulo de correo electrónico: configuración y envío de emails con FastAPI-Mail.
+Módulo de correo electrónico - Envío de emails con SMTP directo
 """
 
-from typing import List, Optional
-
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from jinja2 import Template
+from typing import Optional
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from app.core.config import settings
-
-# Configuración de conexión SMTP
-conf = ConnectionConfig(
-    mail_username=settings.MAIL_USERNAME,
-    mail_password=settings.MAIL_PASSWORD,
-    mail_from=settings.MAIL_FROM,
-    mail_port=settings.MAIL_PORT,
-    mail_server=settings.MAIL_SERVER,
-    mail_starttls=settings.MAIL_STARTTLS,
-    mail_ssl_tls=settings.MAIL_SSL_TLS,
-    use_credentials=True,
-    validate_certs=True,
-)
-
-# Cliente FastMail
-fast_mail = FastMail(conf)
 
 
 async def send_email(
@@ -33,7 +17,7 @@ async def send_email(
     html_body: Optional[str] = None
 ) -> bool:
     """
-    Envía un email simple o con cuerpo HTML.
+    Envía un email simple o con cuerpo HTML usando SMTP directo
     
     Args:
         email: Dirección de correo destino
@@ -45,15 +29,22 @@ async def send_email(
         True si se envió correctamente, False en caso contrario
     """
     try:
-        message = MessageSchema(
-            subject=subject,
-            recipients=[email],
-            body=body,
-            html=html_body,
-            subtype="html" if html_body else "plain"
-        )
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = settings.MAIL_FROM
+        msg["To"] = email
         
-        await fast_mail.send_message(message)
+        if html_body:
+            part = MIMEText(html_body, "html")
+        else:
+            part = MIMEText(body, "plain")
+        
+        msg.attach(part)
+        
+        # Enviar con timeout de 5 segundos
+        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=5) as server:
+            server.sendmail(settings.MAIL_FROM, email, msg.as_string())
+        
         return True
     except Exception as e:
         print(f"Error al enviar email a {email}: {str(e)}")
