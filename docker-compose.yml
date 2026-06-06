@@ -75,6 +75,26 @@ services:
     networks:
       - alecktours_network
 
+  frontend:
+    build:
+      context: ./alecktourfrondend
+
+    container_name: react_frontend
+    restart: always
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ./alecktourfrondend:/app
+      - /app/node_modules
+
+    depends_on:
+      - backend
+
+    networks:
+      - alecktours_network
+
 volumes:
   postgres_data:
   pgadmin_data:
