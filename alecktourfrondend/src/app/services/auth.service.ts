@@ -11,9 +11,16 @@ export interface UsuarioLogin {
   password: string;
 }
 
+export interface RegisterResponse {
+  message: string;
+  user_id: number;
+  email: string;
+  verification_token: string;
+}
+
 export interface AuthResponse {
   access_token: string;
-  refresh_token?: string;
+  refresh_token: string;
   token_type: string;
 }
 
@@ -37,8 +44,20 @@ async function authFetch<T>(endpoint: string, body: object): Promise<T> {
 
 export const authService = {
   register: (data: UsuarioCreate) =>
-    authFetch<{}>('/auth/register', data),
+    authFetch<RegisterResponse>('/auth/register', data),
 
   login: (data: UsuarioLogin) =>
     authFetch<AuthResponse>('/auth/login', data),
+
+  verifyEmail: async (token: string) => {
+    const response = await fetch(
+      `${BASE_URL}/auth/verify-email?token=${encodeURIComponent(token)}`,
+      { method: 'POST', headers: { 'accept': 'application/json' } }
+    );
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || 'Error al verificar email');
+    }
+    return response.json();
+  },
 };

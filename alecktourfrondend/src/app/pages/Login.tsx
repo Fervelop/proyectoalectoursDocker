@@ -14,22 +14,30 @@ export default function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const res = await authService.login(formData);
+    const payload = JSON.parse(atob(res.access_token.split('.')[1]));
+    
+    // Busca id_cliente en localStorage (persiste entre sesiones)
+    const idClienteGuardado = localStorage.getItem('id_cliente_username');
+    const id_cliente = idClienteGuardado ? parseInt(idClienteGuardado) : undefined;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await authService.login(formData);
-      login(res.access_token, { username: formData.username } as any);
-      toast.success("¡Bienvenido!");
-      setTimeout(() => navigate("/"), 500);
-    } catch (err: any) {
-      toast.error(err.message || "Usuario o contraseña incorrectos");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    login(res.access_token, { 
+      username: formData.username, 
+      user_id: parseInt(payload.sub),
+      id_cliente,
+    });
+    toast.success(`¡Bienvenido, ${formData.username}!`);
+    setTimeout(() => navigate("/"), 500);
+  } catch (err: any) {
+    toast.error(err.message || "Usuario o contraseña incorrectos");
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2563EB] via-[#06B6D4] to-[#F59E0B] flex items-center justify-center p-4">
       <Toaster position="top-center" richColors />

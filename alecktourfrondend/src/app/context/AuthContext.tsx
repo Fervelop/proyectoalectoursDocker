@@ -2,8 +2,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 interface Usuario {
   username: string;
+  user_id?: number;
   id_cliente?: number;
-  [key: string]: any;
 }
 
 interface AuthContextType {
@@ -29,11 +29,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  function login(token: string, usuario: Usuario) {
-    setToken(token);
-    setUsuario(usuario);
-    sessionStorage.setItem('token', token);
-    sessionStorage.setItem('usuario', JSON.stringify(usuario));
+  function login(newToken: string, newUsuario: Usuario) {
+    // Recupera id_cliente existente si el nuevo no lo trae
+    const savedUser = sessionStorage.getItem('usuario');
+    const idClienteExistente = savedUser ? JSON.parse(savedUser).id_cliente : undefined;
+    
+    const usuarioFinal = {
+      ...newUsuario,
+      id_cliente: newUsuario.id_cliente ?? idClienteExistente,
+    };
+
+    setToken(newToken);
+    setUsuario(usuarioFinal);
+    sessionStorage.setItem('token', newToken);
+    sessionStorage.setItem('usuario', JSON.stringify(usuarioFinal));
   }
 
   function logout() {
@@ -41,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(null);
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('usuario');
+    sessionStorage.removeItem('id_cliente_pendiente');
   }
 
   return (

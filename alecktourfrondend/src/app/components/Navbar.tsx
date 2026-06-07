@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router";
-import { Plane, User, Menu, X, LogIn, ChevronDown, Building2, Gift, HelpCircle, ShoppingCart } from "lucide-react";
+import { Plane, User, Menu, X, LogIn, ChevronDown, Building2, Gift, ShoppingCart, LogOut } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,7 +10,12 @@ export default function Navbar() {
   const [showBenefitsMenu, setShowBenefitsMenu] = useState(false);
   const [showInfoMenu, setShowInfoMenu] = useState(false);
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, usuario, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <motion.nav
@@ -67,7 +73,6 @@ export default function Navbar() {
                     <Link to="/offers" className="block px-6 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 transition-all">
                       Ofertas especiales
                     </Link>
-                         
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -164,16 +169,24 @@ export default function Navbar() {
             </motion.div>
 
             {/* Login/Profile Button */}
-            {isLoggedIn ? (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
                 <Link
                   to="/profile"
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full hover:shadow-xl transition-all duration-300 font-medium"
                 >
                   <User className="w-5 h-5" />
-                  Mi Perfil
+                  {usuario?.username}
                 </Link>
-              </motion.div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={handleLogout}
+                  className="p-3 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="w-5 h-5" />
+                </motion.button>
+              </div>
             ) : (
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link
@@ -207,48 +220,26 @@ export default function Navbar() {
               className="md:hidden py-4 border-t overflow-hidden"
             >
               <div className="flex flex-col gap-3">
-                <Link
-                  to="/"
-                  className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/" className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
                   Inicio
                 </Link>
-                <Link
-                  to="/search"
-                  className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/search" className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
                   Destinos
                 </Link>
-                <Link
-                  to="/benefits"
-                  className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/benefits" className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
                   Beneficios
                 </Link>
-                <Link
-                  to="/corporate"
-                  className="px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 rounded-lg transition-all"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Convenios empresariales
-                </Link>
-                {isLoggedIn ? (
-                  <Link
-                    to="/profile"
-                    className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Mi Perfil
-                  </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/profile" className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium" onClick={() => setIsMenuOpen(false)}>
+                      Mi Perfil ({usuario?.username})
+                    </Link>
+                    <button onClick={handleLogout} className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg text-center font-medium">
+                      Cerrar sesión
+                    </button>
+                  </>
                 ) : (
-                  <Link
-                    to="/login"
-                    className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/login" className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium" onClick={() => setIsMenuOpen(false)}>
                     Iniciar Sesión
                   </Link>
                 )}
