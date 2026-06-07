@@ -67,6 +67,7 @@ export default function Navbar() {
                     <Link to="/offers" className="block px-6 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 transition-all">
                       Ofertas especiales
                     </Link>
+                         
                   </motion.div>
                 )}
               </AnimatePresence>

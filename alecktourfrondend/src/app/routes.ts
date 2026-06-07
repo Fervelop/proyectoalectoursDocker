@@ -11,6 +11,9 @@ import Personalization from "./pages/Personalization";
 import Benefits from "./pages/Benefits";
 import Corporate from "./pages/Corporate";
 import TravelInfo from "./pages/TravelInfo";
+import Reservas from "./pages/Reservas";
+import Hotel from "./pages/HotelDetail";
+import HotelDetail from "./pages/HotelDetail";
 
 export const router = createBrowserRouter([
   {
@@ -61,4 +64,7 @@ export const router = createBrowserRouter([
     path: "/travel-info",
     Component: TravelInfo,
   },
+  { path: "/reservas", Component: Reservas },
+  { path: '/search', Component: SearchResults },
+  { path: '/hotel/:id', Component: HotelDetail },
 ]);
