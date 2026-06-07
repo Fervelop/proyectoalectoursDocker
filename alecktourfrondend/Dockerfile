@@ -1,23 +1,14 @@
 # Imagen base
 FROM node:22-alpine
 
-# Carpeta de trabajo
 WORKDIR /app
 
-# Instalar pnpm
-RUN npm install -g pnpm
+COPY package.json package-lock.json* ./
 
-# Copiar archivos de dependencias
-COPY package.json pnpm-lock.yaml* ./
+RUN npm install
 
-# Instalar dependencias
-RUN pnpm install
-
-# Copiar el resto del proyecto
 COPY . .
 
-# Exponer puerto de Vite
 EXPOSE 5173
 
-# Ejecutar aplicación
-CMD ["pnpm", "dev", "--host"]
+CMD ["npm", "run", "dev", "--", "--host"]

@@ -3,7 +3,6 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
-
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
@@ -33,4 +32,13 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+
+  // === CONFIGURACIÓN PARA DOCKER ===
+  server: {
+    host: true, // Permite que Docker exponga el puerto fuera del contenedor
+    port: 5173, // Asegura que use el puerto fijo que expusiste en tu Dockerfile
+    watch: {
+      usePolling: true, // Fuerza a Vite a revisar cambios si estás en Windows/WSL con Docker
+    },
+  },
 })
