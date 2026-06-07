@@ -19,17 +19,20 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true);
   try {
     const res = await authService.login(formData);
-    const payload = JSON.parse(atob(res.access_token.split('.')[1]));
     
-    // Busca id_cliente en localStorage (persiste entre sesiones)
-    const idClienteGuardado = localStorage.getItem('id_cliente_username');
-    const id_cliente = idClienteGuardado ? parseInt(idClienteGuardado) : undefined;
-
-    login(res.access_token, { 
-      username: formData.username, 
-      user_id: parseInt(payload.sub),
-      id_cliente,
-    });
+    try {
+      const payload = JSON.parse(atob(res.access_token.split('.')[1]));
+      
+      login(res.access_token, { 
+        username: res.username || formData.username, 
+        user_id: res.user_id || parseInt(payload.sub),
+        id_cliente: res.id_cliente,
+      });
+    } catch (parseErr) {
+      console.error('Error parsing JWT:', parseErr);
+      throw new Error('Token de autenticación inválido');
+    }
+    
     toast.success(`¡Bienvenido, ${formData.username}!`);
     setTimeout(() => navigate("/"), 500);
   } catch (err: any) {

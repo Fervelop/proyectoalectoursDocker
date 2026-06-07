@@ -24,6 +24,31 @@ export interface PagoResponse {
   metodo_pago: MetodoPago;
 }
 
+export interface ReservaDetail {
+  id_reserva: number;
+  id_cliente: number;
+  id_paquete: number;
+  fecha_reserva: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  numero_personas: number;
+  estado: string;
+  paquete?: {
+    id_paquete: number;
+    nombre_paquete: string;
+    descripcion: string;
+    precio_por_persona: number;
+    id_hotel: number;
+    hotel?: {
+      nombre_hotel: string;
+      ciudad: string;
+      pais: string;
+      calificacion: number;
+    };
+  };
+  pagos?: PagoResponse[];
+}
+
 export const reservaService = {
   getAll: (skip = 0, limit = 50) =>
     apiFetch<ReservaResponse[]>(`/reservas?skip=${skip}&limit=${limit}`),
@@ -31,6 +56,10 @@ export const reservaService = {
     apiFetch<ReservaResponse>(`/reservas/${id}`),
   getByCliente: (clienteId: number) =>
     apiFetch<ReservaResponse[]>(`/reservas/cliente/${clienteId}`),
+  getDetail: (id: number) =>
+    apiFetch<ReservaDetail>(`/reservas/${id}`),
+  getPagos: (reservaId: number) =>
+    apiFetch<PagoResponse[]>(`/pagos/reserva/${reservaId}`),
   create: (data: ReservaCreate) =>
     apiFetch<ReservaResponse>('/reservas', { method: 'POST', body: data }),
   update: (id: number, data: Partial<ReservaCreate>) =>

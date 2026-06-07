@@ -15,7 +15,7 @@ import Reservas from "./pages/Reservas";
 import Hotel from "./pages/HotelDetail";
 import HotelDetail from "./pages/HotelDetail";
 import VerifyEmail from "./pages/VerifyEmail";
-import CompleteProfile from "./pages/CompleteProfile";
+import PreferencesForm from "./pages/PreferencesForm";
 
 export const router = createBrowserRouter([
   {
@@ -70,5 +70,5 @@ export const router = createBrowserRouter([
   { path: '/search', Component: SearchResults },
   { path: '/hotel/:id', Component: HotelDetail },
   { path: '/verify', Component: VerifyEmail },
-  { path: '/complete-profile', Component: CompleteProfile },
+{ path: '/preferences', Component: PreferencesForm },
 ]);

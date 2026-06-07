@@ -6,6 +6,7 @@ from app.routes.auth_route import router as auth_router
 from app.routes.hotel_route import router as hotel_router
 from app.routes.cliente_route import router as cliente_router
 from app.routes.reserva_route import router as reserva_router
+from app.routes.preferencias_route import router as preferencias_router
 
 # ============================================================================
 # CONFIGURACIÓN LOGGING
@@ -63,7 +64,7 @@ app.include_router(auth_router)
 app.include_router(hotel_router)
 app.include_router(cliente_router)
 app.include_router(reserva_router)
-
+app.include_router(preferencias_router)
 # ============================================================================
 # ENDPOINTS
 # ============================================================================

@@ -24,26 +24,19 @@ export default function VerifyEmail() {
           <Plane className="w-10 h-10 text-[#2563EB]" />
         </div>
 
-        {status === 'loading' && (
-          <>
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-[#2563EB] rounded-full animate-spin mx-auto mb-6" />
-            <h2 className="text-xl font-bold text-gray-900">Verificando tu cuenta...</h2>
-          </>
-        )}
-
-        {status === 'success' && (
-          <>
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Email verificado!</h2>
-            <p className="text-gray-500 mb-6">Tu cuenta está lista. Completa tu perfil para continuar.</p>
-            <button onClick={() => navigate('/complete-profile')}
-              className="w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white font-semibold rounded-xl hover:shadow-xl transition-all">
-              Completar perfil
-            </button>
-          </>
-        )}
+      {status === 'success' && (
+  <>
+    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <CheckCircle className="w-10 h-10 text-green-600" />
+    </div>
+    <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Email verificado!</h2>
+    <p className="text-gray-500 mb-6">Tu cuenta está lista. Ya puedes iniciar sesión.</p>
+    <button onClick={() => navigate('/login')}
+      className="w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white font-semibold rounded-xl hover:shadow-xl transition-all">
+      Iniciar sesión
+    </button>
+  </>
+)}
 
         {status === 'error' && (
           <>

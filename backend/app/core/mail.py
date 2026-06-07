@@ -1,5 +1,6 @@
 """
 Módulo de correo electrónico - Envío de emails con SMTP directo
+Configurado para Mailpit (desarrollo) — sin TLS, sin autenticación
 """
 
 from typing import Optional
@@ -17,35 +18,50 @@ async def send_email(
     html_body: Optional[str] = None
 ) -> bool:
     """
-    Envía un email simple o con cuerpo HTML usando SMTP directo
-    
+    Envía un email simple o con cuerpo HTML usando SMTP directo.
+
     Args:
         email: Dirección de correo destino
         subject: Asunto del email
         body: Cuerpo en texto plano
         html_body: Cuerpo en HTML (opcional)
-        
+
     Returns:
         True si se envió correctamente, False en caso contrario
     """
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = settings.MAIL_FROM
+        msg["From"] = f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>"
         msg["To"] = email
-        
+
+        # Siempre adjuntar texto plano primero (fallback)
+        msg.attach(MIMEText(body, "plain", "utf-8"))
+
+        # Adjuntar HTML si se provee (tiene prioridad sobre texto plano)
         if html_body:
-            part = MIMEText(html_body, "html")
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+        use_ssl = getattr(settings, "MAIL_SSL_TLS", False)
+        use_tls = getattr(settings, "MAIL_STARTTLS", False)
+
+        if use_ssl:
+            # Puerto 465 — SSL desde el inicio
+            with smtplib.SMTP_SSL(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=10) as server:
+                if settings.MAIL_USERNAME and settings.MAIL_PASSWORD:
+                    server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
+                server.sendmail(settings.MAIL_FROM, [email], msg.as_string())
         else:
-            part = MIMEText(body, "plain")
-        
-        msg.attach(part)
-        
-        # Enviar con timeout de 5 segundos
-        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=5) as server:
-            server.sendmail(settings.MAIL_FROM, email, msg.as_string())
-        
+            # Puerto 587 (STARTTLS) o 1025 (Mailpit sin cifrado)
+            with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=10) as server:
+                if use_tls:
+                    server.starttls()
+                if settings.MAIL_USERNAME and settings.MAIL_PASSWORD:
+                    server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
+                server.sendmail(settings.MAIL_FROM, [email], msg.as_string())
+
         return True
+
     except Exception as e:
         print(f"Error al enviar email a {email}: {str(e)}")
         return False
@@ -54,40 +70,33 @@ async def send_email(
 async def send_welcome_email(email: str, name: str) -> bool:
     """
     Envía un email de bienvenida a un nuevo usuario.
-    
-    Args:
-        email: Dirección de correo destino
-        name: Nombre del usuario
-        
-    Returns:
-        True si se envió correctamente
     """
     subject = "Bienvenido a AlecTours"
-    
+
     body = f"""
-    Hola {name},
-    
-    ¡Bienvenido a AlecTours! Tu cuenta ha sido creada exitosamente.
-    
-    Ya puedes acceder a nuestra plataforma con tus credenciales.
-    
-    Saludos,
-    El equipo de AlecTours
-    """
-    
+Hola {name},
+
+¡Bienvenido a AlecTours! Tu cuenta ha sido creada exitosamente.
+
+Ya puedes acceder a nuestra plataforma con tus credenciales.
+
+Saludos,
+El equipo de AlecTours
+    """.strip()
+
     html_body = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; margin: 20px;">
-            <h2>¡Bienvenido a AlecTours! 🎉</h2>
-            <p>Hola <strong>{name}</strong>,</p>
-            <p>Tu cuenta ha sido creada exitosamente.</p>
-            <p>Ya puedes acceder a nuestra plataforma con tus credenciales.</p>
-            <hr>
-            <p>Saludos,<br>El equipo de AlecTours</p>
-        </body>
-    </html>
-    """
-    
+<html>
+    <body style="font-family: Arial, sans-serif; margin: 20px;">
+        <h2>¡Bienvenido a AlecTours! 🎉</h2>
+        <p>Hola <strong>{name}</strong>,</p>
+        <p>Tu cuenta ha sido creada exitosamente.</p>
+        <p>Ya puedes acceder a nuestra plataforma con tus credenciales.</p>
+        <hr>
+        <p>Saludos,<br>El equipo de AlecTours</p>
+    </body>
+</html>
+    """.strip()
+
     return await send_email(email, subject, body, html_body)
 
 
@@ -98,50 +107,42 @@ async def send_verification_email(
 ) -> bool:
     """
     Envía un email de verificación con un enlace.
-    
-    Args:
-        email: Dirección de correo destino
-        verification_token: Token de verificación
-        base_url: URL base de la aplicación
-        
-    Returns:
-        True si se envió correctamente
     """
     verification_link = f"{base_url}/verify?token={verification_token}"
-    
+
     subject = "Verifica tu correo - AlecTours"
-    
+
     body = f"""
-    Hola,
-    
-    Por favor verifica tu correo haciendo clic en el siguiente enlace:
-    {verification_link}
-    
-    Este enlace expirará en 24 horas.
-    
-    Saludos,
-    El equipo de AlecTours
-    """
-    
+Hola,
+
+Por favor verifica tu correo haciendo clic en el siguiente enlace:
+{verification_link}
+
+Este enlace expirará en 24 horas.
+
+Saludos,
+El equipo de AlecTours
+    """.strip()
+
     html_body = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; margin: 20px;">
-            <h2>Verifica tu correo</h2>
-            <p>Por favor, haz clic en el botón de abajo para verificar tu dirección de correo:</p>
-            <a href="{verification_link}" 
-               style="background-color: #007bff; color: white; padding: 10px 20px; 
-                      text-decoration: none; border-radius: 5px; display: inline-block;">
-                Verificar Correo
-            </a>
-            <p style="color: #666; font-size: 12px; margin-top: 20px;">
-                Este enlace expirará en 24 horas.
-            </p>
-            <hr>
-            <p>Saludos,<br>El equipo de AlecTours</p>
-        </body>
-    </html>
-    """
-    
+<html>
+    <body style="font-family: Arial, sans-serif; margin: 20px;">
+        <h2>Verifica tu correo</h2>
+        <p>Por favor, haz clic en el botón de abajo para verificar tu dirección de correo:</p>
+        <a href="{verification_link}"
+           style="background-color: #007bff; color: white; padding: 10px 20px;
+                  text-decoration: none; border-radius: 5px; display: inline-block;">
+            Verificar Correo
+        </a>
+        <p style="color: #666; font-size: 12px; margin-top: 20px;">
+            Este enlace expirará en 24 horas.
+        </p>
+        <hr>
+        <p>Saludos,<br>El equipo de AlecTours</p>
+    </body>
+</html>
+    """.strip()
+
     return await send_email(email, subject, body, html_body)
 
 
@@ -152,55 +153,47 @@ async def send_password_reset_email(
 ) -> bool:
     """
     Envía un email para reseteo de contraseña.
-    
-    Args:
-        email: Dirección de correo destino
-        reset_token: Token para resetear contraseña
-        base_url: URL base de la aplicación
-        
-    Returns:
-        True si se envió correctamente
     """
     reset_link = f"{base_url}/reset-password?token={reset_token}"
-    
+
     subject = "Restablecer contraseña - AlecTours"
-    
+
     body = f"""
-    Hola,
-    
-    Recibimos una solicitud para restablecer tu contraseña.
-    
-    Haz clic en el siguiente enlace para crear una nueva contraseña:
-    {reset_link}
-    
-    Si no solicitaste esto, ignora este correo.
-    Este enlace expirará en 1 hora.
-    
-    Saludos,
-    El equipo de AlecTours
-    """
-    
+Hola,
+
+Recibimos una solicitud para restablecer tu contraseña.
+
+Haz clic en el siguiente enlace para crear una nueva contraseña:
+{reset_link}
+
+Si no solicitaste esto, ignora este correo.
+Este enlace expirará en 1 hora.
+
+Saludos,
+El equipo de AlecTours
+    """.strip()
+
     html_body = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; margin: 20px;">
-            <h2>Restablecer contraseña</h2>
-            <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-            <p>Haz clic en el botón de abajo para crear una nueva:</p>
-            <a href="{reset_link}"
-               style="background-color: #28a745; color: white; padding: 10px 20px;
-                      text-decoration: none; border-radius: 5px; display: inline-block;">
-                Restablecer Contraseña
-            </a>
-            <p style="color: #666; font-size: 12px; margin-top: 20px;">
-                Si no solicitaste esto, ignora este correo.
-                Este enlace expirará en 1 hora.
-            </p>
-            <hr>
-            <p>Saludos,<br>El equipo de AlecTours</p>
-        </body>
-    </html>
-    """
-    
+<html>
+    <body style="font-family: Arial, sans-serif; margin: 20px;">
+        <h2>Restablecer contraseña</h2>
+        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+        <p>Haz clic en el botón de abajo para crear una nueva:</p>
+        <a href="{reset_link}"
+           style="background-color: #28a745; color: white; padding: 10px 20px;
+                  text-decoration: none; border-radius: 5px; display: inline-block;">
+            Restablecer Contraseña
+        </a>
+        <p style="color: #666; font-size: 12px; margin-top: 20px;">
+            Si no solicitaste esto, ignora este correo.
+            Este enlace expirará en 1 hora.
+        </p>
+        <hr>
+        <p>Saludos,<br>El equipo de AlecTours</p>
+    </body>
+</html>
+    """.strip()
+
     return await send_email(email, subject, body, html_body)
 
 
@@ -215,79 +208,67 @@ async def send_reservation_confirmation(
 ) -> bool:
     """
     Envía confirmación de reserva.
-    
-    Args:
-        email: Dirección de correo destino
-        reservation_id: ID de la reserva
-        hotel_name: Nombre del hotel
-        check_in: Fecha de entrada
-        check_out: Fecha de salida
-        total_price: Precio total
-        guest_name: Nombre del huésped
-        
-    Returns:
-        True si se envió correctamente
     """
     subject = f"Confirmación de Reserva #{reservation_id} - AlecTours"
-    
+
     body = f"""
-    Hola {guest_name},
-    
-    Tu reserva ha sido confirmada.
-    
-    Detalles:
-    - Reserva ID: {reservation_id}
-    - Hotel: {hotel_name}
-    - Check-in: {check_in}
-    - Check-out: {check_out}
-    - Total: ${total_price:.2f}
-    
-    Gracias por elegir AlecTours.
-    
-    Saludos,
-    El equipo de AlecTours
-    """
-    
+Hola {guest_name},
+
+Tu reserva ha sido confirmada.
+
+Detalles:
+- Reserva ID: {reservation_id}
+- Hotel: {hotel_name}
+- Check-in: {check_in}
+- Check-out: {check_out}
+- Total: ${total_price:.2f}
+
+Gracias por elegir AlecTours.
+
+Saludos,
+El equipo de AlecTours
+    """.strip()
+
     html_body = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; margin: 20px; color: #333;">
-            <h2>Confirmación de Reserva 🎉</h2>
-            <p>Hola <strong>{guest_name}</strong>,</p>
-            <p>Tu reserva ha sido confirmada exitosamente.</p>
-            
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #007bff;">Detalles de tu Reserva</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 8px; font-weight: bold;">Número de Reserva:</td>
-                        <td style="padding: 8px;">{reservation_id}</td>
-                    </tr>
-                    <tr style="background-color: #fff;">
-                        <td style="padding: 8px; font-weight: bold;">Hotel:</td>
-                        <td style="padding: 8px;">{hotel_name}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px; font-weight: bold;">Check-in:</td>
-                        <td style="padding: 8px;">{check_in}</td>
-                    </tr>
-                    <tr style="background-color: #fff;">
-                        <td style="padding: 8px; font-weight: bold;">Check-out:</td>
-                        <td style="padding: 8px;">{check_out}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px; font-weight: bold;">Total:</td>
-                        <td style="padding: 8px; color: #28a745; font-weight: bold;">${total_price:.2f}</td>
-                    </tr>
-                </table>
-            </div>
-            
-            <p>Gracias por elegir AlecTours para tu próxima aventura.</p>
-            <hr>
-            <p>Saludos,<br>El equipo de AlecTours</p>
-        </body>
-    </html>
-    """
-    
+<html>
+    <body style="font-family: Arial, sans-serif; margin: 20px; color: #333;">
+        <h2>Confirmación de Reserva 🎉</h2>
+        <p>Hola <strong>{guest_name}</strong>,</p>
+        <p>Tu reserva ha sido confirmada exitosamente.</p>
+
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #007bff;">Detalles de tu Reserva</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8px; font-weight: bold;">Número de Reserva:</td>
+                    <td style="padding: 8px;">#{reservation_id}</td>
+                </tr>
+                <tr style="background-color: #fff;">
+                    <td style="padding: 8px; font-weight: bold;">Hotel:</td>
+                    <td style="padding: 8px;">{hotel_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-weight: bold;">Check-in:</td>
+                    <td style="padding: 8px;">{check_in}</td>
+                </tr>
+                <tr style="background-color: #fff;">
+                    <td style="padding: 8px; font-weight: bold;">Check-out:</td>
+                    <td style="padding: 8px;">{check_out}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-weight: bold;">Total:</td>
+                    <td style="padding: 8px; color: #28a745; font-weight: bold;">${total_price:.2f}</td>
+                </tr>
+            </table>
+        </div>
+
+        <p>Gracias por elegir AlecTours para tu próxima aventura.</p>
+        <hr>
+        <p>Saludos,<br>El equipo de AlecTours</p>
+    </body>
+</html>
+    """.strip()
+
     return await send_email(email, subject, body, html_body)
 
 
@@ -299,45 +280,40 @@ async def send_cancellation_email(
 ) -> bool:
     """
     Envía confirmación de cancelación de reserva.
-    
-    Args:
-        email: Dirección de correo destino
-        reservation_id: ID de la reserva
-        guest_name: Nombre del huésped
-        refund_amount: Monto a reembolsar (opcional)
-        
-    Returns:
-        True si se envió correctamente
     """
     subject = f"Cancelación de Reserva #{reservation_id} - AlecTours"
-    
-    refund_text = f"Reembolso: ${refund_amount:.2f}" if refund_amount else ""
-    
+
+    refund_text = f"\nReembolso: ${refund_amount:.2f}" if refund_amount else ""
+
     body = f"""
-    Hola {guest_name},
-    
-    Tu reserva #{reservation_id} ha sido cancelada.
-    
-    {refund_text}
-    
-    Si tienes dudas, contacta a nuestro equipo.
-    
-    Saludos,
-    El equipo de AlecTours
-    """
-    
+Hola {guest_name},
+
+Tu reserva #{reservation_id} ha sido cancelada.
+{refund_text}
+
+Si tienes dudas, contacta a nuestro equipo.
+
+Saludos,
+El equipo de AlecTours
+    """.strip()
+
+    refund_html = (
+        f'<p style="color: #28a745;">Reembolso: <strong>${refund_amount:.2f}</strong></p>'
+        if refund_amount else ""
+    )
+
     html_body = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; margin: 20px; color: #333;">
-            <h2>Cancelación de Reserva</h2>
-            <p>Hola <strong>{guest_name}</strong>,</p>
-            <p>Tu reserva <strong>#{reservation_id}</strong> ha sido cancelada.</p>
-            {f'<p style="color: #28a745;">Reembolso: <strong>${refund_amount:.2f}</strong></p>' if refund_amount else ''}
-            <p>Si tienes dudas, no dudes en contactarnos.</p>
-            <hr>
-            <p>Saludos,<br>El equipo de AlecTours</p>
-        </body>
-    </html>
-    """
-    
+<html>
+    <body style="font-family: Arial, sans-serif; margin: 20px; color: #333;">
+        <h2>Cancelación de Reserva</h2>
+        <p>Hola <strong>{guest_name}</strong>,</p>
+        <p>Tu reserva <strong>#{reservation_id}</strong> ha sido cancelada.</p>
+        {refund_html}
+        <p>Si tienes dudas, no dudes en contactarnos.</p>
+        <hr>
+        <p>Saludos,<br>El equipo de AlecTours</p>
+    </body>
+</html>
+    """.strip()
+
     return await send_email(email, subject, body, html_body)

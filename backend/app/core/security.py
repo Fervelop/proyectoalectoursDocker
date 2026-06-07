@@ -223,3 +223,32 @@ def verify_verification_token(token: str) -> Optional[str]:
         return email
     except JWTError:
         return None
+
+
+def get_current_user(authorization: Optional[str] = None) -> Optional[int]:
+    """
+    Extrae y valida el usuario del header Authorization.
+    
+    Args:
+        authorization: Header Authorization con formato "Bearer <token>"
+        
+    Returns:
+        user_id si el token es válido, None si es inválido
+    """
+    from fastapi import HTTPException
+    
+    if not authorization:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    
+    # Extraer el token del header "Authorization: Bearer <token>"
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    token = parts[1]
+    user_id = get_user_from_token(token)
+    
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Token expirado o inválido")
+    
+    return user_id

@@ -21,8 +21,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedToken = sessionStorage.getItem('token');
-    const savedUser = sessionStorage.getItem('usuario');
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('usuario');
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUsuario(JSON.parse(savedUser));
@@ -30,8 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   function login(newToken: string, newUsuario: Usuario) {
-    // Recupera id_cliente existente si el nuevo no lo trae
-    const savedUser = sessionStorage.getItem('usuario');
+    const savedUser = localStorage.getItem('usuario');
     const idClienteExistente = savedUser ? JSON.parse(savedUser).id_cliente : undefined;
     
     const usuarioFinal = {
@@ -41,15 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(newToken);
     setUsuario(usuarioFinal);
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('usuario', JSON.stringify(usuarioFinal));
+    // También sincronizar a sessionStorage para apiFetch
     sessionStorage.setItem('token', newToken);
-    sessionStorage.setItem('usuario', JSON.stringify(usuarioFinal));
   }
 
   function logout() {
     setToken(null);
     setUsuario(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
     sessionStorage.removeItem('token');
-    sessionStorage.removeItem('usuario');
     sessionStorage.removeItem('id_cliente_pendiente');
   }
 
