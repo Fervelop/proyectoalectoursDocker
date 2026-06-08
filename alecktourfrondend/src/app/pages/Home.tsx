@@ -88,7 +88,7 @@ export default function Home() {
         </div>
 
         {/* Search Bar */}
-        <div className="absolute -bottom-20 left-0 right-0 px-4 z-20">
+        <div className="absolute-bottom-20 left-0 right-0 px-4 z-20">
           <SearchBar />
         </div>
       </section>

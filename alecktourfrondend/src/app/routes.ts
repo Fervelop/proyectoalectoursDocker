@@ -18,6 +18,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import PreferencesForm from "./pages/PreferencesForm";
 import AdminDashboard from "./pages/Admindashboard";
 import FAQ from "./pages/faq";
+import Contact from "./pages/Contact";
 
 export const router = createBrowserRouter([
   {
@@ -74,5 +75,6 @@ export const router = createBrowserRouter([
   { path: '/verify', Component: VerifyEmail },
 { path: '/preferences', Component: PreferencesForm },
  { path: "/admin", Component: AdminDashboard },
- { path: "/faq", Component: FAQ } 
+ { path: "/faq", Component: FAQ } ,
+ { path: "/contact", Component: Contact }
 ]);

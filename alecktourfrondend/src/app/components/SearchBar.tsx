@@ -16,12 +16,13 @@ export default function SearchBar() {
   };
 
   return (
+    
     <motion.form
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
       onSubmit={handleSearch}
-      className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto border border-gray-100"
+      className="  bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto border border-gray-100"
     >
       <div className="flex items-center gap-2 mb-6">
         <Sparkles className="w-5 h-5 text-[#FF6B35]" />
@@ -114,7 +115,7 @@ export default function SearchBar() {
           transition={{ duration: 0.6 }}
         />
         <Search className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-        <span>Buscar paquetes increíbles</span>
+        <span>Buscar paquetes increíbles </span>
       </motion.button>
     </motion.form>
   );
