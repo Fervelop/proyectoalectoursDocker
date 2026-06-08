@@ -36,6 +36,12 @@ def register_user(db: Session, username: str, email: str, password: str):
     user = create_user(db, user_data)
     verification_token = create_verification_token(email)
 
+    db.execute(
+        text("INSERT INTO usuarios_roles (id_usuario, id_rol) VALUES (:uid, 2)"),
+        {"uid": user.id_usuario}
+    )
+    db.commit()
+
     return {
         "user_id": user.id_usuario,
         "verification_token": verification_token,

@@ -16,50 +16,33 @@ export default function Login() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await authService.login(formData);
-
-      // Leer roles desde el payload del JWT
-      let rolesFromToken: string[] = [];
-      try {
-        const payload = JSON.parse(atob(res.access_token.split('.')[1]));
-        rolesFromToken = payload.roles ?? [];
-      } catch {
-        console.warn('No se pudieron leer roles del JWT');
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const res = await authService.login(formData);
+    login(res.access_token, {
+      username: res.username ?? formData.username,
+      user_id: res.user_id,
+      id_cliente: res.id_cliente,
+      roles: res.roles ?? [],
+    });
+    toast.success(`¡Bienvenido, ${res.username ?? formData.username}!`);
+    
+    // Redirige según el rol
+    const roles = res.roles ?? [];
+    setTimeout(() => {
+      if (roles.includes('admin')) {
+        navigate('/admin');
+      } else {
+        navigate('/');
       }
-
-      // Los roles también vienen en la respuesta del backend
-      const roles: string[] = (res as any).roles ?? rolesFromToken;
-
-      login(res.access_token, {
-        username: res.username || formData.username,
-        user_id: res.user_id,
-        id_cliente: res.id_cliente,
-        roles,
-      });
-
-      toast.success(`¡Bienvenido, ${formData.username}!`);
-
-      // Redirigir según rol
-      setTimeout(() => {
-        if (roles.includes('admin')) {
-          navigate('/admin');
-        } else if (roles.includes('empleado')) {
-          navigate('/empleado');
-        } else {
-          navigate('/');
-        }
-      }, 500);
-
-    } catch (err: any) {
-      toast.error(err.message || "Usuario o contraseña incorrectos");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    }, 500);
+  } catch (err: any) {
+    toast.error(err.message || 'Usuario o contraseña incorrectos');
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2563EB] via-[#06B6D4] to-[#F59E0B] flex items-center justify-center p-4">
       <Toaster position="top-center" richColors />
