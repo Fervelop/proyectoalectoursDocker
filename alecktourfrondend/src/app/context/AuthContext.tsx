@@ -4,6 +4,7 @@ interface Usuario {
   username: string;
   user_id?: number;
   id_cliente?: number;
+  roles?: string[];          // ← nuevo
 }
 
 interface AuthContextType {
@@ -12,6 +13,8 @@ interface AuthContextType {
   login: (token: string, usuario: Usuario) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;          // ← nuevo helper
+  isEmpleado: boolean;       // ← nuevo helper
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -31,9 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function login(newToken: string, newUsuario: Usuario) {
     const savedUser = localStorage.getItem('usuario');
-    const idClienteExistente = savedUser ? JSON.parse(savedUser).id_cliente : undefined;
-    
-    const usuarioFinal = {
+    const idClienteExistente = savedUser
+      ? JSON.parse(savedUser).id_cliente
+      : undefined;
+
+    const usuarioFinal: Usuario = {
       ...newUsuario,
       id_cliente: newUsuario.id_cliente ?? idClienteExistente,
     };
@@ -42,7 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(usuarioFinal);
     localStorage.setItem('token', newToken);
     localStorage.setItem('usuario', JSON.stringify(usuarioFinal));
-    // También sincronizar a sessionStorage para apiFetch
     sessionStorage.setItem('token', newToken);
   }
 
@@ -55,8 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem('id_cliente_pendiente');
   }
 
+  const isAdmin = usuario?.roles?.includes('admin') ?? false;
+  const isEmpleado = usuario?.roles?.includes('empleado') ?? false;
+
   return (
-    <AuthContext.Provider value={{ usuario, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{ usuario, token, login, logout, isAuthenticated: !!token, isAdmin, isEmpleado }}
+    >
       {children}
     </AuthContext.Provider>
   );

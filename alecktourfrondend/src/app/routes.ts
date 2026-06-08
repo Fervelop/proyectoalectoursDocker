@@ -16,6 +16,8 @@ import Hotel from "./pages/HotelDetail";
 import HotelDetail from "./pages/HotelDetail";
 import VerifyEmail from "./pages/VerifyEmail";
 import PreferencesForm from "./pages/PreferencesForm";
+import AdminDashboard from "./pages/Admindashboard";
+import FAQ from "./pages/faq";
 
 export const router = createBrowserRouter([
   {
@@ -71,4 +73,6 @@ export const router = createBrowserRouter([
   { path: '/hotel/:id', Component: HotelDetail },
   { path: '/verify', Component: VerifyEmail },
 { path: '/preferences', Component: PreferencesForm },
+ { path: "/admin", Component: AdminDashboard },
+ { path: "/faq", Component: FAQ } 
 ]);

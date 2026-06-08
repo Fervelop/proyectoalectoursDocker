@@ -14,33 +14,52 @@ export default function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  try {
-    const res = await authService.login(formData);
-    
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      const payload = JSON.parse(atob(res.access_token.split('.')[1]));
-      
-      login(res.access_token, { 
-        username: res.username || formData.username, 
-        user_id: res.user_id || parseInt(payload.sub),
+      const res = await authService.login(formData);
+
+      // Leer roles desde el payload del JWT
+      let rolesFromToken: string[] = [];
+      try {
+        const payload = JSON.parse(atob(res.access_token.split('.')[1]));
+        rolesFromToken = payload.roles ?? [];
+      } catch {
+        console.warn('No se pudieron leer roles del JWT');
+      }
+
+      // Los roles también vienen en la respuesta del backend
+      const roles: string[] = (res as any).roles ?? rolesFromToken;
+
+      login(res.access_token, {
+        username: res.username || formData.username,
+        user_id: res.user_id,
         id_cliente: res.id_cliente,
+        roles,
       });
-    } catch (parseErr) {
-      console.error('Error parsing JWT:', parseErr);
-      throw new Error('Token de autenticación inválido');
+
+      toast.success(`¡Bienvenido, ${formData.username}!`);
+
+      // Redirigir según rol
+      setTimeout(() => {
+        if (roles.includes('admin')) {
+          navigate('/admin');
+        } else if (roles.includes('empleado')) {
+          navigate('/empleado');
+        } else {
+          navigate('/');
+        }
+      }, 500);
+
+    } catch (err: any) {
+      toast.error(err.message || "Usuario o contraseña incorrectos");
+    } finally {
+      setLoading(false);
     }
-    
-    toast.success(`¡Bienvenido, ${formData.username}!`);
-    setTimeout(() => navigate("/"), 500);
-  } catch (err: any) {
-    toast.error(err.message || "Usuario o contraseña incorrectos");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2563EB] via-[#06B6D4] to-[#F59E0B] flex items-center justify-center p-4">
       <Toaster position="top-center" richColors />
@@ -63,9 +82,11 @@ const handleSubmit = async (e: React.FormEvent) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="text" name="username" value={formData.username}
+                <input
+                  type="text" name="username" value={formData.username}
                   onChange={handleChange} placeholder="juanperez123" required
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none" />
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none"
+                />
               </div>
             </div>
 
@@ -73,14 +94,18 @@ const handleSubmit = async (e: React.FormEvent) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="password" name="password" value={formData.password}
+                <input
+                  type="password" name="password" value={formData.password}
                   onChange={handleChange} placeholder="••••••••" required
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none" />
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none"
+                />
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 disabled:opacity-50">
+            <button
+              type="submit" disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+            >
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
           </form>
