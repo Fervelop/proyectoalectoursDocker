@@ -224,3 +224,6 @@ def delete_pago(pago_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=e.detail)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+

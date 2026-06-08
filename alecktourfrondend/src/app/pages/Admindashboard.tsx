@@ -4,7 +4,7 @@ import { LayoutDashboard, CalendarDays, PlusCircle, Hotel, Package, Users, UserP
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../api/v1/api";
-import { Reserva, HotelData, Paquete, Cliente } from "../components/admin/types";
+import { Reserva, HotelData, Paquete, Cliente, Empleado, Pago } from "../components/admin/types";
 import ModuleDashboard from "../components/admin/ModuleDashboard";
 import ModuleReservas from "../components/admin/ModuleReservas";
 import ModuleCrearReserva from "../components/admin/ModuleCrearReserva";
@@ -15,13 +15,13 @@ import ModuleClientes from "../components/admin/ModuleClientes";
 type Module = "dashboard" | "reservas" | "crear-reserva" | "hoteles" | "paquetes" | "clientes" | "usuarios";
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "reservas", label: "Reservas", icon: CalendarDays },
-  { id: "crear-reserva", label: "Crear Reserva", icon: PlusCircle },
-  { id: "hoteles", label: "Hoteles", icon: Hotel },
-  { id: "paquetes", label: "Paquetes", icon: Package },
-  { id: "clientes", label: "Clientes", icon: Users },
-  { id: "usuarios", label: "Usuarios", icon: UserPlus },
+  { id: "dashboard",     label: "Dashboard",     icon: LayoutDashboard },
+  { id: "reservas",      label: "Reservas",       icon: CalendarDays    },
+  { id: "crear-reserva", label: "Crear Reserva",  icon: PlusCircle      },
+  { id: "hoteles",       label: "Hoteles",         icon: Hotel           },
+  { id: "paquetes",      label: "Paquetes",        icon: Package         },
+  { id: "clientes",      label: "Clientes",        icon: Users           },
+  { id: "usuarios",      label: "Usuarios",        icon: UserPlus        },
 ] as const;
 
 export default function AdminDashboard() {
@@ -31,24 +31,33 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const [reservas, setReservas] = useState<Reserva[]>([]);
-  const [hoteles, setHoteles] = useState<HotelData[]>([]);
-  const [paquetes, setPaquetes] = useState<Paquete[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [reservas,  setReservas]  = useState<Reserva[]>([]);
+  const [hoteles,   setHoteles]   = useState<HotelData[]>([]);
+  const [paquetes,  setPaquetes]  = useState<Paquete[]>([]);
+  const [clientes,  setClientes]  = useState<Cliente[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [pagos,     setPagos]     = useState<Pago[]>([]);
 
+  // AUTH: sin tocar
   useEffect(() => { if (!isAdmin) navigate("/"); }, [isAdmin]);
 
   useEffect(() => {
-    if (activeModule === "reservas" || activeModule === "dashboard") fetchReservas();
-    if (activeModule === "hoteles" || activeModule === "dashboard") fetchHoteles();
-    if (activeModule === "paquetes" || activeModule === "crear-reserva") fetchPaquetes();
-    if (activeModule === "clientes" || activeModule === "crear-reserva") fetchClientes();
+    if (activeModule === "reservas" || activeModule === "dashboard") {
+      fetchReservas();
+      fetchEmpleados();
+      fetchPagos();
+    }
+    if (activeModule === "hoteles"      || activeModule === "dashboard")     fetchHoteles();
+    if (activeModule === "paquetes"     || activeModule === "crear-reserva") fetchPaquetes();
+    if (activeModule === "clientes"     || activeModule === "crear-reserva") fetchClientes();
   }, [activeModule]);
 
-  const fetchReservas = async () => { try { setReservas(await apiFetch<Reserva[]>("/reservas?limit=100")); } catch {} };
-  const fetchHoteles = async () => { try { setHoteles(await apiFetch<HotelData[]>("/hoteles/?limit=100")); } catch {} };
-  const fetchPaquetes = async () => { try { setPaquetes(await apiFetch<Paquete[]>("/paquetes?limit=100")); } catch {} };
-  const fetchClientes = async () => { try { setClientes(await apiFetch<Cliente[]>("/clientes?limit=100")); } catch {} };
+  const fetchReservas  = async () => { try { setReservas(await apiFetch<Reserva[]>("/reservas?limit=100"));    } catch {} };
+  const fetchHoteles   = async () => { try { setHoteles(await apiFetch<HotelData[]>("/hoteles/?limit=100"));   } catch {} };
+  const fetchPaquetes  = async () => { try { setPaquetes(await apiFetch<Paquete[]>("/paquetes?limit=100"));    } catch {} };
+  const fetchClientes  = async () => { try { setClientes(await apiFetch<Cliente[]>("/clientes?limit=100"));    } catch {} };
+  const fetchEmpleados = async () => { try { setEmpleados(await apiFetch<Empleado[]>("/empleados?limit=100")); } catch {} };
+  const fetchPagos     = async () => { try { setPagos(await apiFetch<Pago[]>("/pagos?limit=100"));             } catch {} };
 
   const deleteReserva = async (id: number) => {
     if (!confirm("¿Eliminar esta reserva?")) return;
@@ -73,40 +82,80 @@ export default function AdminDashboard() {
 
   const submitReserva = async (data: any) => {
     setLoading(true);
-    try { await apiFetch("/reservas", { method: "POST", body: data }); fetchReservas(); }
+    try { await apiFetch("/reservas",  { method: "POST", body: data }); fetchReservas(); }
     finally { setLoading(false); }
   };
   const submitHotel = async (data: any) => {
     setLoading(true);
-    try { await apiFetch("/hoteles/", { method: "POST", body: data }); fetchHoteles(); }
+    try { await apiFetch("/hoteles/",  { method: "POST", body: data }); fetchHoteles(); }
     finally { setLoading(false); }
   };
   const submitPaquete = async (data: any) => {
     setLoading(true);
-    try { await apiFetch("/paquetes", { method: "POST", body: data }); fetchPaquetes(); }
+    try { await apiFetch("/paquetes",  { method: "POST", body: data }); fetchPaquetes(); }
     finally { setLoading(false); }
   };
   const submitCliente = async (data: any) => {
     setLoading(true);
-    try { await apiFetch("/clientes", { method: "POST", body: data }); fetchClientes(); }
+    try { await apiFetch("/clientes",  { method: "POST", body: data }); fetchClientes(); }
     finally { setLoading(false); }
   };
 
   const handleLogout = () => { logout(); navigate("/"); };
 
   const MODULES: Record<Module, React.ReactNode> = {
-dashboard: <ModuleDashboard
-  reservas={reservas}
-  hoteles={hoteles}
-  paquetes={paquetes}
-  clientes={clientes}
-  setActiveModule={setActiveModule}
-/>,
-    reservas: <ModuleReservas reservas={reservas} onDelete={deleteReserva} onNueva={() => setActiveModule("crear-reserva")} />,
-    "crear-reserva": <ModuleCrearReserva clientes={clientes} paquetes={paquetes} onSubmit={submitReserva} loading={loading} />,
-    hoteles: <ModuleHoteles hoteles={hoteles} onDelete={deleteHotel} onSubmit={submitHotel} loading={loading} />,
-    paquetes: <ModulePaquetes paquetes={paquetes} onDelete={deletePaquete} onSubmit={submitPaquete} loading={loading} />,
-    clientes: <ModuleClientes clientes={clientes} onDelete={deleteCliente} onSubmit={submitCliente} loading={loading} />,
+    dashboard: (
+      <ModuleDashboard
+        reservas={reservas}
+        hoteles={hoteles}
+        paquetes={paquetes}
+        clientes={clientes}
+        setActiveModule={setActiveModule}
+      />
+    ),
+    reservas: (
+      <ModuleReservas
+        reservas={reservas}
+        clientes={clientes}
+        empleados={empleados}
+        paquetes={paquetes}
+        pagos={pagos}
+        onDelete={deleteReserva}
+        onNueva={() => setActiveModule("crear-reserva")}
+      />
+    ),
+    "crear-reserva": (
+      <ModuleCrearReserva
+        clientes={clientes}
+        paquetes={paquetes}
+        onSubmit={submitReserva}
+        loading={loading}
+      />
+    ),
+    hoteles: (
+      <ModuleHoteles
+        hoteles={hoteles}
+        onDelete={deleteHotel}
+        onSubmit={submitHotel}
+        loading={loading}
+      />
+    ),
+    paquetes: (
+      <ModulePaquetes
+        paquetes={paquetes}
+        onDelete={deletePaquete}
+        onSubmit={submitPaquete}
+        loading={loading}
+      />
+    ),
+    clientes: (
+      <ModuleClientes
+        clientes={clientes}
+        onDelete={deleteCliente}
+        onSubmit={submitCliente}
+        loading={loading}
+      />
+    ),
     usuarios: (
       <div className="space-y-4">
         <h2 className="text-2xl font-bold text-gray-900">Usuarios</h2>

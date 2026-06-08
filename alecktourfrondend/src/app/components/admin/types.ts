@@ -2,10 +2,21 @@ export interface Reserva {
   id_reserva: number;
   id_cliente: number;
   id_paquete: number;
+  id_empleado?: number;           // null = reserva hecha en web sin asesor
   fecha_inicio: string;
   fecha_fin: string;
   numero_personas: number;
   estado: string;
+}
+
+export type CanalOrigen = "web" | "empleado" | "telefono";
+
+// Extiende Reserva con el campo canal_origen
+// Recomendado: agregar esta columna a la tabla `reservas` en la DB
+// ALTER TABLE reservas ADD COLUMN canal_origen VARCHAR(20) DEFAULT 'web'
+//   CHECK (canal_origen IN ('web', 'empleado', 'telefono'));
+export interface ReservaExtended extends Reserva {
+  canal_origen?: CanalOrigen;
 }
 
 export interface HotelData {
@@ -38,12 +49,33 @@ export interface Cliente {
   pais: string;
 }
 
+export interface Empleado {
+  id_empleado: number;
+  nombre: string;
+  apellido: string;
+  correo_electronico: string;
+  celular?: string;
+}
+
+export interface Pago {
+  id_pago: number;
+  id_reserva: number;
+  monto: number;
+  estado: "pendiente" | "pagado" | "rechazado";
+  referencia?: string;
+  metodo_pago?: {
+    id_metodo: number;
+    nombre_metodo: string;
+  };
+}
+
 export const ESTADO_COLOR: Record<string, string> = {
   pendiente: "bg-amber-100 text-amber-700",
   confirmada: "bg-green-100 text-green-700",
-  cancelada: "bg-red-100 text-red-700",
+  cancelada:  "bg-red-100 text-red-700",
   finalizada: "bg-blue-100 text-blue-700",
 };
 
-export const inputCls = "w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none text-sm";
+export const inputCls =
+  "w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm";
 export const labelCls = "block text-sm font-medium text-gray-700 mb-1";
