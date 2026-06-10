@@ -2,6 +2,7 @@
 Módulo de correo electrónico - Envío de emails con SMTP directo
 Configurado para Mailpit (desarrollo) — sin TLS, sin autenticación
 """
+   
 
 from typing import Optional
 import smtplib
