@@ -19,6 +19,7 @@ import PreferencesForm from "./pages/PreferencesForm";
 import AdminDashboard from "./pages/Admindashboard";
 import FAQ from "./pages/faq";
 import Contact from "./pages/Contact";
+import ResetPassword from "./pages/ResetPassword";
 
 export const router = createBrowserRouter([
   {
@@ -76,5 +77,6 @@ export const router = createBrowserRouter([
 { path: '/preferences', Component: PreferencesForm },
  { path: "/admin", Component: AdminDashboard },
  { path: "/faq", Component: FAQ } ,
- { path: "/contact", Component: Contact }
+ { path: "/contact", Component: Contact },
+ { path: '/reset-password', Component: ResetPassword }
 ]);

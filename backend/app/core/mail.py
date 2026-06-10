@@ -7,9 +7,7 @@ from typing import Optional
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
 from app.core.config import settings
-
 
 async def send_email(
     email: str,
@@ -145,57 +143,28 @@ El equipo de AlecTours
 
     return await send_email(email, subject, body, html_body)
 
-
 async def send_password_reset_email(
     email: str,
     reset_token: str,
-    base_url: str = "http://localhost:3000"
+    base_url: str = "http://localhost:5173"
 ) -> bool:
-    """
-    Envía un email para reseteo de contraseña.
-    """
     reset_link = f"{base_url}/reset-password?token={reset_token}"
-
     subject = "Restablecer contraseña - AlecTours"
-
-    body = f"""
-Hola,
-
-Recibimos una solicitud para restablecer tu contraseña.
-
-Haz clic en el siguiente enlace para crear una nueva contraseña:
-{reset_link}
-
-Si no solicitaste esto, ignora este correo.
-Este enlace expirará en 1 hora.
-
-Saludos,
-El equipo de AlecTours
-    """.strip()
-
+    body = f"Haz clic aquí para restablecer tu contraseña: {reset_link}"
     html_body = f"""
-<html>
-    <body style="font-family: Arial, sans-serif; margin: 20px;">
+    <html><body style="font-family: Arial, sans-serif; margin: 20px;">
         <h2>Restablecer contraseña</h2>
-        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-        <p>Haz clic en el botón de abajo para crear una nueva:</p>
-        <a href="{reset_link}"
-           style="background-color: #28a745; color: white; padding: 10px 20px;
-                  text-decoration: none; border-radius: 5px; display: inline-block;">
+        <p>Haz clic en el botón para crear una nueva contraseña:</p>
+        <a href="{reset_link}" style="background-color: #2563EB; color: white; padding: 10px 20px;
+           text-decoration: none; border-radius: 5px; display: inline-block;">
             Restablecer Contraseña
         </a>
         <p style="color: #666; font-size: 12px; margin-top: 20px;">
-            Si no solicitaste esto, ignora este correo.
-            Este enlace expirará en 1 hora.
+            Este enlace expirará en 24 horas.
         </p>
-        <hr>
-        <p>Saludos,<br>El equipo de AlecTours</p>
-    </body>
-</html>
-    """.strip()
-
+    </body></html>
+    """
     return await send_email(email, subject, body, html_body)
-
 
 async def send_reservation_confirmation(
     email: str,

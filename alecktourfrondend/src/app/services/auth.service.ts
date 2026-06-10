@@ -11,13 +11,13 @@ export interface UsuarioLogin {
   password: string;
 }
 
-
 export interface RegisterResponse {
   message: string;
   user_id: number;
   email: string;
   verification_token: string;
 }
+
 export interface AuthResponse {
   access_token: string;
   refresh_token: string;
@@ -25,7 +25,7 @@ export interface AuthResponse {
   user_id?: number;
   username?: string;
   id_cliente?: number;
-  roles?: string[];   // ← agrega esto
+  roles?: string[];
 }
 
 async function authFetch<T>(endpoint: string, body: object): Promise<T> {
@@ -64,4 +64,11 @@ export const authService = {
     }
     return response.json();
   },
+
+  // ✅ Estos van DENTRO del objeto
+  forgotPassword: (correo_electronico: string) =>
+    authFetch<{ message: string }>('/auth/forgot-password', { correo_electronico }),
+
+  resetPassword: (token: string, new_password: string) =>
+    authFetch<{ message: string }>('/auth/reset-password', { token, new_password }),
 };
