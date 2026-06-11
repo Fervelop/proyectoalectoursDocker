@@ -70,9 +70,7 @@ export default function Navbar() {
                     <Link to="/search?transport=vuelo" className="block px-6 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 transition-all">
                       Paquetes con vuelo
                     </Link>
-                    <Link to="/offers" className="block px-6 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 transition-all">
-                      Ofertas especiales
-                    </Link>
+                   
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -158,7 +156,7 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            {/* Shopping Cart */}
+            {/* Shopping Cart 
             <motion.div whileHover={{ scale: 1.1 }} className="relative">
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <ShoppingCart className="w-6 h-6 text-gray-700" />
@@ -167,7 +165,7 @@ export default function Navbar() {
                 </span>
               </button>
             </motion.div>
-
+*/}
             {/* Login/Profile Button */}
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
