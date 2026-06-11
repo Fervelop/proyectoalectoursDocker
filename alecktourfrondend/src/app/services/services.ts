@@ -45,3 +45,5 @@ export const pagoService = {
   create: (data: PagoCreate) =>
     apiFetch<PagoResponse>('/pagos', { method: 'POST', body: data }),
 };
+
+

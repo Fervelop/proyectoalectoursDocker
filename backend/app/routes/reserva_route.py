@@ -1,6 +1,7 @@
+from app.services.reserva_detail_service import ReservaDetailService
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-
+from sqlalchemy import text
 from app.core.database import get_db
 from app.core.exceptions import ReservaDependencyError, PaqueteDependencyError, NotFoundError
 from app.schemas.reserva_schema import (
@@ -27,6 +28,13 @@ def get_paquetes(
     """Obtiene lista de paquetes activos"""
     return PaqueteRepository.get_all(db, skip, limit)
 
+@router.get("/paquetes/populares")
+def get_paquetes_populares(limit: int = 6, db: Session = Depends(get_db)):
+    result = db.execute(
+        text("SELECT * FROM vista_paquetes_populares LIMIT :limit"),
+        {"limit": limit}
+    ).fetchall()
+    return [dict(r._mapping) for r in result]
 
 @router.get("/paquetes/{paquete_id}", response_model=PaqueteResponse)
 def get_paquete(paquete_id: int, db: Session = Depends(get_db)):
@@ -49,7 +57,6 @@ def update_paquete(paquete_id: int, paquete: PaqueteUpdate, db: Session = Depend
     db_paquete = PaqueteRepository.get_by_id(db, paquete_id)
     if not db_paquete:
         raise HTTPException(status_code=404, detail="Paquete no encontrado")
-    
     return PaqueteRepository.update(db, paquete_id, paquete.dict(exclude_unset=True))
 
 
@@ -100,8 +107,28 @@ def get_reservas_estado(
     """Obtiene reservas por estado"""
     if estado not in ["pendiente", "confirmada", "cancelada", "finalizada"]:
         raise HTTPException(status_code=400, detail="Estado inválido")
-    
     return ReservaRepository.get_by_estado(db, estado, skip, limit)
+
+
+# ⚠️ IMPORTANTE: estos tres endpoints específicos van ANTES de /reservas/{reserva_id}
+# para que FastAPI no los confunda con el parámetro dinámico
+
+@router.get("/reservas/{reserva_id}/habitaciones")
+def get_habitaciones_reserva(reserva_id: int, db: Session = Depends(get_db)):
+    """Obtiene habitaciones asociadas a una reserva"""
+    return ReservaDetailService.get_habitaciones(db, reserva_id)
+
+
+@router.get("/reservas/{reserva_id}/servicios")
+def get_servicios_reserva(reserva_id: int, db: Session = Depends(get_db)):
+    """Obtiene servicios asociados a una reserva"""
+    return ReservaDetailService.get_servicios(db, reserva_id)
+
+
+@router.get("/reservas/{reserva_id}/historial")
+def get_historial_reserva(reserva_id: int, db: Session = Depends(get_db)):
+    """Obtiene historial de cambios de una reserva"""
+    return ReservaDetailService.get_historial(db, reserva_id)
 
 
 @router.get("/reservas/{reserva_id}", response_model=ReservaDetailResponse)
@@ -125,7 +152,6 @@ def update_reserva(reserva_id: int, reserva: ReservaUpdate, db: Session = Depend
     db_reserva = ReservaRepository.get_by_id(db, reserva_id)
     if not db_reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
-    
     return ReservaRepository.update(db, reserva_id, reserva.dict(exclude_unset=True))
 
 
@@ -185,7 +211,6 @@ def get_pagos_estado(
     """Obtiene pagos por estado"""
     if estado not in ["pendiente", "pagado", "rechazado"]:
         raise HTTPException(status_code=400, detail="Estado inválido")
-    
     return PagoRepository.get_by_estado(db, estado, skip, limit)
 
 
@@ -210,7 +235,6 @@ def update_pago(pago_id: int, pago: PagoUpdate, db: Session = Depends(get_db)):
     db_pago = PagoRepository.get_by_id(db, pago_id)
     if not db_pago:
         raise HTTPException(status_code=404, detail="Pago no encontrado")
-    
     return PagoRepository.update(db, pago_id, pago.dict(exclude_unset=True))
 
 
@@ -224,6 +248,3 @@ def delete_pago(pago_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=e.detail)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-

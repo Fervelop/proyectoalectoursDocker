@@ -4,7 +4,7 @@ interface Usuario {
   username: string;
   user_id?: number;
   id_cliente?: number;
-  roles?: string[];          // ← nuevo
+  roles?: string[];
 }
 
 interface AuthContextType {
@@ -13,8 +13,9 @@ interface AuthContextType {
   login: (token: string, usuario: Usuario) => void;
   logout: () => void;
   isAuthenticated: boolean;
-  isAdmin: boolean;          // ← nuevo helper
-  isEmpleado: boolean;       // ← nuevo helper
+  isAdmin: boolean;
+  isEmpleado: boolean;
+  authLoading: boolean; // ← nuevo: true mientras lee localStorage
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,14 +23,22 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(true); // ← empieza en true
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('usuario');
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUsuario(JSON.parse(savedUser));
+      try {
+        setToken(savedToken);
+        setUsuario(JSON.parse(savedUser));
+      } catch {
+        // JSON inválido — limpiar
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+      }
     }
+    setAuthLoading(false); // ← ya terminó de leer
   }, []);
 
   function login(newToken: string, newUsuario: Usuario) {
@@ -64,7 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ usuario, token, login, logout, isAuthenticated: !!token, isAdmin, isEmpleado }}
+      value={{
+        usuario,
+        token,
+        login,
+        logout,
+        isAuthenticated: !!token,
+        isAdmin,
+        isEmpleado,
+        authLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>

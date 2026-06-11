@@ -6,6 +6,7 @@ import {
   CheckCircle, Clock, XCircle, FileText
 } from "lucide-react";
 import { Reserva, Cliente, Paquete, ESTADO_COLOR, inputCls, labelCls } from "./types";
+import { reservaDetailService } from "../../services/reserva.service";
 
 // ─── Extended types ────────────────────────────────────────────────────────────
 
@@ -136,6 +137,34 @@ function SidePanel({ reserva, cliente, empleado, paquete, pago, onClose, onDelet
     pendiente: "text-amber-700",
     rechazado: "text-red-600",
   };
+
+  // ─── Estado para detalles extra ───────────────────────────────────────────
+  const [habitaciones, setHabitaciones] = useState<any[]>([]);
+  const [servicios, setServicios] = useState<any[]>([]);
+  const [historial, setHistorial] = useState<any[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const [detailError, setDetailError] = useState("");
+
+  async function loadDetail() {
+    setLoadingDetail(true);
+    setDetailError("");
+    try {
+      const [h, s, hist] = await Promise.all([
+        reservaDetailService.getHabitaciones(reserva.id_reserva),
+        reservaDetailService.getServicios(reserva.id_reserva),
+        reservaDetailService.getHistorial(reserva.id_reserva),
+      ]);
+      setHabitaciones(h);
+      setServicios(s);
+      setHistorial(hist);
+      setShowDetail(true);
+    } catch (e: any) {
+      setDetailError("No se pudieron cargar los detalles");
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
 
   return (
     <>
@@ -292,6 +321,79 @@ function SidePanel({ reserva, cliente, empleado, paquete, pago, onClose, onDelet
               )}
             </div>
           </section>
+
+          {/* ─── Detalles extra (habitaciones, servicios, historial) ─── */}
+          {detailError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-3 text-xs flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              {detailError}
+            </div>
+          )}
+
+          {showDetail && (
+            <>
+              {habitaciones.length > 0 && (
+                <section>
+                  <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    🛏 Habitaciones
+                  </h3>
+                  <div className="space-y-2">
+                    {habitaciones.map((h, i) => (
+                      <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 text-xs">
+                        <p className="font-semibold text-gray-800">{h.nombre_hotel} — Hab. {h.numero_habitacion}</p>
+                        <p className="text-gray-500">{h.nombre_tipo} · ${h.precio_acordado?.toLocaleString("es-CO")}</p>
+                        <p className="text-gray-400">{h.fecha_checkin} → {h.fecha_checkout}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {servicios.length > 0 && (
+                <section>
+                  <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    🎯 Servicios
+                  </h3>
+                  <div className="space-y-2">
+                    {servicios.map((s, i) => (
+                      <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 text-xs">
+                        <p className="font-semibold text-gray-800">{s.nombre_servicio}</p>
+                        <p className="text-gray-500">{s.nombre_categoria} · {s.duracion_horas}h</p>
+                        <p className="text-gray-400">{s.fecha_servicio} · {s.numero_personas} personas</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {historial.length > 0 && (
+                <section>
+                  <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    📋 Historial
+                  </h3>
+                  <div className="space-y-2">
+                    {historial.map((h, i) => (
+                      <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 text-xs">
+                        <p className="font-semibold text-gray-800">{h.estado_anterior} → {h.estado_nuevo}</p>
+                        <p className="text-gray-500">{h.nombre_empleado}</p>
+                        <p className="text-gray-400">{h.fecha_cambio}</p>
+                        {h.comentarios && (
+                          <p className="text-gray-600 mt-1 italic">"{h.comentarios}"</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {habitaciones.length === 0 && servicios.length === 0 && historial.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-2">
+                  No hay detalles adicionales registrados
+                </p>
+              )}
+            </>
+          )}
+
         </div>
 
         {/* Footer actions */}
@@ -302,8 +404,13 @@ function SidePanel({ reserva, cliente, empleado, paquete, pago, onClose, onDelet
           >
             <Trash2 className="w-3.5 h-3.5" /> Eliminar
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg text-xs font-semibold hover:shadow-md transition-all">
-            <ChevronRight className="w-3.5 h-3.5" /> Ver detalle completo
+          <button
+            onClick={loadDetail}
+            disabled={loadingDetail}
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg text-xs font-semibold hover:shadow-md transition-all disabled:opacity-60"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+            {loadingDetail ? "Cargando..." : showDetail ? "Actualizar detalles" : "Ver detalle completo"}
           </button>
         </div>
       </div>
@@ -398,7 +505,6 @@ export default function ModuleReservas({
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -409,7 +515,6 @@ export default function ModuleReservas({
           />
         </div>
 
-        {/* Estado tabs */}
         <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
           {ESTADOS.map(e => (
             <button
@@ -451,7 +556,6 @@ export default function ModuleReservas({
                 >
                   <td className="px-4 py-3 font-semibold text-gray-700">#{r.id_reserva}</td>
 
-                  {/* Cliente con avatar */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 min-w-0">
                       {cl ? (
@@ -468,7 +572,6 @@ export default function ModuleReservas({
                     </div>
                   </td>
 
-                  {/* Paquete */}
                   <td className="px-4 py-3">
                     {pk ? (
                       <div>
@@ -484,7 +587,6 @@ export default function ModuleReservas({
                   <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">{r.fecha_fin}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{r.numero_personas}</td>
 
-                  {/* Canal */}
                   <td className="px-4 py-3">
                     <span title={r.canal_origen ?? "web"}>
                       {CANAL_ICON[r.canal_origen ?? "web"]}

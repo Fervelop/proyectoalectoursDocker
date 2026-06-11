@@ -74,3 +74,13 @@ export const pagoService = {
   create: (data: PagoCreate) =>
     apiFetch<PagoResponse>('/pagos', { method: 'POST', body: data }),
 };
+
+
+export const reservaDetailService = {
+  getHabitaciones: (id: number) =>
+    apiFetch<any[]>(`/reservas/${id}/habitaciones`),
+  getServicios: (id: number) =>
+    apiFetch<any[]>(`/reservas/${id}/servicios`),
+  getHistorial: (id: number) =>
+    apiFetch<any[]>(`/reservas/${id}/historial`),
+};

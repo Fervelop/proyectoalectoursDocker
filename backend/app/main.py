@@ -7,7 +7,7 @@ from app.routes.hotel_route import router as hotel_router
 from app.routes.cliente_route import router as cliente_router
 from app.routes.reserva_route import router as reserva_router
 from app.routes.preferencias_route import router as preferencias_router
-
+from sqlalchemy import text
 # ============================================================================
 # CONFIGURACIÓN LOGGING
 # ============================================================================

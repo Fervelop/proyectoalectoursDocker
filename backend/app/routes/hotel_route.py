@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/hoteles", tags=["Hoteles"])
 
 # ===================== HOTELES CRUD =====================
 
-@router.get("/", response_model=list[HotelResponse])
+@router.get("/", response_model=list[HotelDetailResponse])
 def get_hotels(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
