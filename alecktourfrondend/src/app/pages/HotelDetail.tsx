@@ -320,6 +320,8 @@ export default function HotelDetail() {
               </p>
             </div>
           </div>
+          LVSOKxU1/fSNogl4kGBmqo18qw0u+N9IZJE2ZnlVCH0
+          Juan-Pablo-Castillo-Velasquez
         </div>
       </div>
     </div>
