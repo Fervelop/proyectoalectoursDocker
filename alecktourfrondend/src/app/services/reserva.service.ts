@@ -66,6 +66,8 @@ export const reservaService = {
     apiFetch<ReservaResponse>(`/reservas/${id}`, { method: 'PUT', body: data }),
   delete: (id: number) =>
     apiFetch<{ message: string }>(`/reservas/${id}`, { method: 'DELETE' }),
+
+  
   updateEstado: (id: number, estado: string) =>
   apiFetch<ReservaResponse>(`/reservas/${id}`, {
     method: 'PUT',
