@@ -1,16 +1,16 @@
-import { useParams, Link } from "react-router";
+import {
+  Bus,
+  CheckCircle,
+  Clock,
+  Hotel,
+  MapPin,
+  Plane,
+  Sparkles,
+  Star,
+} from "lucide-react";
+import { Link, useParams } from "react-router";
 import Navbar from "../components/Navbar";
 import { packages } from "../data/packages";
-import {
-  Star,
-  MapPin,
-  Clock,
-  Plane,
-  Bus,
-  Hotel,
-  CheckCircle,
-  Sparkles,
-} from "lucide-react";
 
 export default function PackageDetail() {
   const { id } = useParams();

@@ -1,8 +1,16 @@
-import { Link, useNavigate } from "react-router";
-import { Plane, User, Menu, X, LogIn, ChevronDown, Building2, Gift, ShoppingCart, LogOut } from "lucide-react";
+import { Building2, ChevronDown, Gift, LogIn, LogOut, Menu, Plane, User, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useAuthModal } from "../context/AuthModalContext";
+
+function getRoleLabel(roles?: string[]) {
+  if (!roles || roles.length === 0) return "Cliente";
+  if (roles.includes("admin")) return "Admin";
+  if (roles.includes("empleado")) return "Empleado";
+  return "Cliente";
+}
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +19,9 @@ export default function Navbar() {
   const [showInfoMenu, setShowInfoMenu] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, usuario, logout } = useAuth();
+  const { openLogin, openRegister } = useAuthModal();
+
+  const roleLabel = getRoleLabel(usuario?.roles);
 
   const handleLogout = () => {
     logout();
@@ -75,15 +86,6 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Mi Reserva */}
-            <Link
-              to="/profile"
-              className="text-gray-700 hover:text-[#FF6B35] transition-all duration-300 font-medium relative group"
-            >
-              Mi Reserva
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] group-hover:w-full transition-all duration-300" />
-            </Link>
 
             {/* Beneficios */}
             <div className="relative group">
@@ -164,7 +166,12 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full hover:shadow-xl transition-all duration-300 font-medium"
                 >
                   <User className="w-5 h-5" />
-                  {usuario?.username}
+                  <span className="flex items-center gap-2">
+                    {usuario?.username}
+                    <span className="text-[10px] uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full font-semibold">
+                      {roleLabel}
+                    </span>
+                  </span>
                 </Link>
                 <motion.button
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -176,15 +183,15 @@ export default function Navbar() {
                 </motion.button>
               </div>
             ) : (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link
-                  to="/login"
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full hover:shadow-xl transition-all duration-300 font-medium"
-                >
-                  <LogIn className="w-5 h-5" />
-                  Iniciar Sesión
-                </Link>
-              </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={openLogin}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full hover:shadow-xl transition-all duration-300 font-medium"
+              >
+                <LogIn className="w-5 h-5" />
+                Iniciar Sesión
+              </motion.button>
             )}
           </div>
 
@@ -219,17 +226,37 @@ export default function Navbar() {
                 </Link>
                 {isAuthenticated ? (
                   <>
-                    <Link to="/profile" className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/profile" className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium flex items-center justify-center gap-2" onClick={() => setIsMenuOpen(false)}>
                       Mi Perfil ({usuario?.username})
+                      <span className="text-[10px] uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full font-semibold">
+                        {roleLabel}
+                      </span>
                     </Link>
                     <button onClick={handleLogout} className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg text-center font-medium">
                       Cerrar sesión
                     </button>
                   </>
                 ) : (
-                  <Link to="/login" className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium" onClick={() => setIsMenuOpen(false)}>
-                    Iniciar Sesión
-                  </Link>
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        openLogin();
+                      }}
+                      className="px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg text-center font-medium"
+                    >
+                      Iniciar Sesión
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        openRegister();
+                      }}
+                      className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-center font-medium hover:bg-gray-50"
+                    >
+                      Crear cuenta
+                    </button>
+                  </>
                 )}
               </div>
             </motion.div>

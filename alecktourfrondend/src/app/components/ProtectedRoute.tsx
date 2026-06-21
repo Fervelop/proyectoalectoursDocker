@@ -1,10 +1,22 @@
+import { useEffect } from "react";
 import { Navigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useAuthModal } from "../context/AuthModalContext";
 
 interface Props {
   children: React.ReactNode;
   requiredRole?: "admin" | "empleado";
   redirectTo?: string;
+}
+
+function RequireLogin({ redirectTo }: { redirectTo: string }) {
+  const { openLogin } = useAuthModal();
+
+  useEffect(() => {
+    openLogin();
+  }, []);
+
+  return <Navigate to={redirectTo} replace />;
 }
 
 export default function ProtectedRoute({ children, requiredRole, redirectTo = "/" }: Props) {
@@ -21,8 +33,8 @@ export default function ProtectedRoute({ children, requiredRole, redirectTo = "/
     );
   }
 
-  // No autenticado → login
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // No autenticado → home + abre el modal de login
+  if (!isAuthenticated) return <RequireLogin redirectTo="/" />;
 
   // Ruta exclusiva admin
   if (requiredRole === "admin" && !isAdmin) {
