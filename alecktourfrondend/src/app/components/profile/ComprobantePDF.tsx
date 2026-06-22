@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { Download, Loader2 } from "lucide-react";
-import { reservaService, ReservaDetail, PagoResponse } from "../../services/reserva.service";
-import { ClienteResponse } from "../../services/cliente.service";
-
 import jsPDF from "jspdf";
+import { Download, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { ClienteResponse } from "../../services/cliente.service";
+import { PagoResponse, ReservaDetail, reservaService } from "../../services/reserva.service";
 
 interface Props {
   reservaId: number;
@@ -20,7 +19,7 @@ export default function ComprobantePDF({ reservaId, clienteData }: Props) {
         reservaService.getDetail(reservaId),
         reservaService.getPagos(reservaId).catch(() => [] as PagoResponse[]),
       ]);
-      descargarPDF(detalle, pagos ?? []);
+      await descargarPDF(detalle, pagos ?? []);
     } catch (err) {
       console.error("Error generando PDF", err);
     } finally {
@@ -28,174 +27,233 @@ export default function ComprobantePDF({ reservaId, clienteData }: Props) {
     }
   };
 
-  const descargarPDF = (detalle: ReservaDetail, pagos: PagoResponse[] = []) => {
+  // Helper para convertir el QR a Base64 usando tu color Granate (#7B1E3A -> RGB: 123-30-58)
+  const getQRBase64 = (text: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(text)}&color=123-30-58`;
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg"));
+      };
+      img.onerror = () => resolve("");
+      img.src = url;
+    });
+  };
+
+  const descargarPDF = async (detalle: ReservaDetail, pagos: PagoResponse[] = []) => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const W = 210;
     const margin = 20;
     let y = 0;
 
-    // HEADER
-    doc.setFillColor(37, 99, 235);
-    doc.rect(0, 0, W, 45, "F");
-    doc.setFillColor(6, 182, 212);
-    doc.rect(0, 38, W, 7, "F");
+    // ── 1. HEADER CORPORATIVO (GRANATE IDENTITY) ───────────────────────────
+    doc.setFillColor(123, 30, 58); // --primary Granate #7B1E3A
+    doc.rect(0, 0, W, 40, "F");
+    doc.setFillColor(201, 162, 39); // --chart-2 Dorado de Contraste #C9A227
+    doc.rect(0, 37, W, 3, "F");
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.text("AlecTours", margin, 18);
-    doc.setFontSize(10);
+    doc.setFontSize(22);
+    doc.text("AlekTours", margin, 16);
+
     doc.setFont("helvetica", "normal");
-    doc.text("Comprobante de Reserva", margin, 27);
-    doc.text(`Generado: ${new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" })}`, margin, 34);
-
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    doc.text(`#${String(detalle.id_reserva).padStart(6, "0")}`, W - margin, 22, { align: "right" });
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text("N° RESERVA", W - margin, 28, { align: "right" });
-
-    y = 58;
-
-    // ESTADO
-    const estadoColors: Record<string, [number, number, number]> = {
-      confirmada: [22, 163, 74], pendiente: [234, 88, 12],
-      cancelada: [220, 38, 38], finalizada: [107, 114, 128],
-    };
-    const [r, g, b] = estadoColors[detalle.estado] ?? [107, 114, 128];
-    doc.setFillColor(r, g, b);
-    doc.roundedRect(margin, y - 6, 35, 9, 2, 2, "F");
-    doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text(detalle.estado.toUpperCase(), margin + 17.5, y, { align: "center" });
-    y += 12;
+    doc.text("VIVE TU PRÓXIMA AVENTURA", margin, 21);
+    doc.text(`Emisión: ${new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })}`, margin, 30);
 
+    // Caja contenedora del Número de Reserva (Sólido basado en variación del Granate)
+    doc.setFillColor(161, 59, 85); // --chart-5 #A13B55
+    doc.roundedRect(W - margin - 45, 10, 45, 18, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text(`#${String(detalle.id_reserva).padStart(6, "0")}`, W - margin - 22.5, 19, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text("NÚMERO DE RESERVA", W - margin - 22.5, 24, { align: "center" });
+
+    y = 54;
+
+    // ── 2. SECCIONES Y FILAS ESTILIZADAS ─────────────────────────────────────
     const drawSection = (titulo: string, yPos: number): number => {
-      doc.setFillColor(248, 250, 252);
-      doc.rect(margin, yPos, W - margin * 2, 7, "F");
-      doc.setTextColor(37, 99, 235);
-      doc.setFontSize(10);
+      // Borde suave basado en la opacidad de tu --border
+      doc.setDrawColor(234, 219, 223); // Mezcla sutil de granate transparente sobre blanco
+      doc.setLineWidth(0.3);
+      doc.line(margin, yPos, W - margin, yPos);
+
+      doc.setTextColor(123, 30, 58); // Títulos en Granate Principal
       doc.setFont("helvetica", "bold");
-      doc.text(titulo.toUpperCase(), margin + 3, yPos + 5);
+      doc.setFontSize(9.5);
+      doc.text(titulo.toUpperCase(), margin, yPos + 6);
       return yPos + 12;
     };
 
     const drawRow = (label: string, value: string, yPos: number, col = 0): void => {
-      const x = col === 0 ? margin : W / 2 + 5;
-      doc.setTextColor(107, 114, 128);
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.text(label, x, yPos);
-      doc.setTextColor(17, 24, 39);
-      doc.setFontSize(9);
+      const x = col === 0 ? margin : col === 1 ? (W / 2 - 15) : (W - margin - 45);
+      doc.setTextColor(107, 107, 107); // --muted-foreground #6b6b6b
+      doc.setFont("helvetica", "medium");
+      doc.setFontSize(7.5);
+      doc.text(label.toUpperCase(), x, yPos);
+
+      doc.setTextColor(46, 46, 46); // oklch(0.18 0 0) aproximado a #2E2E2E
       doc.setFont("helvetica", "bold");
-      doc.text(value || "—", x, yPos + 5);
+      doc.setFontSize(9);
+      doc.text(value || "—", x, yPos + 4.5);
     };
 
-    // CLIENTE
+    // BADGE DINÁMICO DE ESTADOS (Mapeado exacto con variantes armónicas)
+    const estadoColors: Record<string, { bg: [number, number, number]; tx: [number, number, number] }> = {
+      confirmada: { bg: [240, 253, 244], tx: [21, 128, 61] },   // Verde Éxito
+      pendiente: { bg: [241, 228, 232], tx: [123, 30, 58] },    // --accent #f1e4e8 y --primary #7B1E3A
+      cancelada: { bg: [254, 242, 242], tx: [198, 40, 40] },    // --destructive #c62828
+      finalizada: { bg: [243, 243, 245], tx: [107, 107, 107] }, // --muted y --muted-foreground
+    };
+    const color = estadoColors[detalle.estado] ?? estadoColors.pendiente;
+    doc.setFillColor(color.bg[0], color.bg[1], color.bg[2]);
+    doc.roundedRect(margin, y, 32, 6, 1, 1, "F");
+    doc.setTextColor(color.tx[0], color.tx[1], color.tx[2]);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.text(detalle.estado.toUpperCase(), margin + 16, y + 4.2, { align: "center" });
+
+    y += 12;
+
+    // INFORMACIÓN DEL CLIENTE
     y = drawSection("Información del Cliente", y);
-    drawRow("Nombre completo", `${clienteData.nombre} ${clienteData.apellido}`, y, 0);
-    drawRow("Cédula", clienteData.cedula, y, 1);
-    y += 12;
-    drawRow("Correo electrónico", clienteData.correo, y, 0);
-    drawRow("Celular", clienteData.celular || "—", y, 1);
-    y += 12;
-    drawRow("Ciudad", `${clienteData.ciudad || "—"}, ${clienteData.pais || "—"}`, y, 0);
-    y += 14;
+    drawRow("Titular de Reserva", `${clienteData.nombre} ${clienteData.apellido}`, y, 0);
+    drawRow("Identificación (Cédula)", clienteData.cedula, y, 1);
+    y += 11;
+    drawRow("Email de contacto", clienteData.correo, y, 0);
+    drawRow("Teléfono Celular", clienteData.celular || "—", y, 1);
+    y += 15;
 
-    // RESERVA
-    y = drawSection("Detalle de la Reserva", y);
-    const fechaInicio = new Date(detalle.fecha_inicio).toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" });
-    const fechaFin = new Date(detalle.fecha_fin).toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" });
+    // DETALLE DE LA RESERVA
+    y = drawSection("Especificaciones del Itinerario", y);
+    const fechaInicio = new Date(detalle.fecha_inicio).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
+    const fechaFin = new Date(detalle.fecha_fin).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
     const noches = Math.max(1, Math.ceil((new Date(detalle.fecha_fin).getTime() - new Date(detalle.fecha_inicio).getTime()) / 86400000));
-    const fechaReserva = new Date(detalle.fecha_reserva).toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" });
+    const fechaReserva = new Date(detalle.fecha_reserva).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 
-    drawRow("Fecha de reserva", fechaReserva, y, 0);
-    drawRow("N° de personas", String(detalle.numero_personas), y, 1);
-    y += 12;
-    drawRow("Check-in", fechaInicio, y, 0);
-    drawRow("Check-out", fechaFin, y, 1);
-    y += 12;
-    drawRow("Duración", `${noches} noches`, y, 0);
-    drawRow("ID Paquete", `#${detalle.id_paquete}`, y, 1);
-    y += 14;
+    drawRow("Fecha de Compra", fechaReserva, y, 0);
+    drawRow("Cupos Reservados", `${detalle.numero_personas} Pasajeros`, y, 1);
+    y += 11;
+    drawRow("Check-In (Ingreso)", fechaInicio, y, 0);
+    drawRow("Check-Out (Salida)", fechaFin, y, 1);
+    drawRow("Duración", `${noches} Noches`, y, 2);
+    y += 15;
 
-    // PAQUETE / HOTEL
+    // DETALLE DEL ALOJAMIENTO / PAQUETE
     if (detalle.paquete) {
-      y = drawSection("Alojamiento", y);
+      y = drawSection("Servicios Incluidos y Alojamiento", y);
       const hotel = detalle.paquete.hotel;
-      drawRow("Paquete", detalle.paquete.nombre_paquete || `Paquete #${detalle.id_paquete}`, y, 0);
-      drawRow("Precio por persona", `$${detalle.paquete.precio_por_persona?.toLocaleString("es-CO") || "—"}`, y, 1);
-      y += 12;
+      drawRow("Plan / Paquete Contratado", detalle.paquete.nombre_paquete || `Paquete Turístico #${detalle.id_paquete}`, y, 0);
+      drawRow("Tarifa base (Por Persona)", `$${detalle.paquete.precio_por_persona?.toLocaleString("es-CO")} COP`, y, 1);
+      y += 11;
       if (hotel) {
-        drawRow("Hotel", hotel.nombre_hotel, y, 0);
-        drawRow("Ubicación", `${hotel.ciudad}, ${hotel.pais}`, y, 1);
-        y += 12;
-        drawRow("Calificación", `${"★".repeat(hotel.calificacion || 0)} (${hotel.calificacion}/5)`, y, 0);
+        drawRow("Hotel Asignado", hotel.nombre_hotel, y, 0);
+        drawRow("Destino / Ubicación", `${hotel.ciudad}, ${hotel.pais}`, y, 1);
+        drawRow("Categoría", `${"★".repeat(Math.min(5, hotel.calificacion || 0))} (${hotel.calificacion}/5)`, y, 2);
       }
-      y += 14;
+      y += 16;
     }
 
-    // PAGOS
+    // ── 3. TABLA DE CONTROL DE PAGOS ────────────────────────────────────────
     if (pagos.length > 0) {
-      y = drawSection("Historial de Pagos", y);
+      y = drawSection("Transacciones y Estado Financiero", y);
+
+      // Fondos de tabla basados en --input-background (#f7f5f6)
+      doc.setFillColor(247, 245, 246);
+      doc.rect(margin, y, W - margin * 2, 6, "F");
+      doc.setTextColor(107, 107, 107); // --muted-foreground
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text("MÉTODO", margin + 3, y + 4.2);
+      doc.text("FECHA", margin + 40, y + 4.2);
+      doc.text("REFERENCIA", margin + 75, y + 4.2);
+      doc.text("ESTADO", margin + 115, y + 4.2);
+      doc.text("MONTO", W - margin - 3, y + 4.2, { align: "right" });
+
+      y += 6;
       let totalPagado = 0;
 
-      pagos.forEach((pago, i) => {
+      pagos.forEach((pago) => {
         const fechaPago = new Date(pago.fecha_pago).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
-        const estadoPagoColors: Record<string, [number, number, number]> = {
-          pagado: [22, 163, 74], pendiente: [234, 88, 12], rechazado: [220, 38, 38],
-        };
-        const [pr, pg, pb] = estadoPagoColors[pago.estado] ?? [107, 114, 128];
+        const stColor = pago.estado === "pagado" ? [21, 128, 61] : [123, 30, 58];
 
-        doc.setFillColor(i % 2 === 0 ? 249 : 255, i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 252 : 255);
-        doc.rect(margin, y - 4, W - margin * 2, 10, "F");
+        doc.setDrawColor(243, 243, 245); // --muted
+        doc.setLineWidth(0.2);
+        doc.line(margin, y + 6, W - margin, y + 6);
 
-        doc.setTextColor(17, 24, 39);
-        doc.setFontSize(8.5);
+        doc.setTextColor(46, 46, 46);
         doc.setFont("helvetica", "normal");
-        doc.text(`${pago.metodo_pago?.nombre_metodo || "—"}`, margin + 2, y + 2);
-        doc.text(fechaPago, margin + 50, y + 2);
-        doc.text(`Ref: ${pago.referencia || "—"}`, margin + 90, y + 2);
+        doc.setFontSize(8);
+        doc.text(`${pago.metodo_pago?.nombre_metodo || "Transferencia"}`, margin + 3, y + 4);
+        doc.text(fechaPago, margin + 40, y + 4);
+        doc.text(pago.referencia || "—", margin + 75, y + 4);
 
-        doc.setFillColor(pr, pg, pb);
-        doc.roundedRect(margin + 125, y - 3, 22, 7, 1.5, 1.5, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(7);
+        doc.setTextColor(stColor[0], stColor[1], stColor[2]);
         doc.setFont("helvetica", "bold");
-        doc.text(pago.estado.toUpperCase(), margin + 136, y + 2, { align: "center" });
+        doc.text(pago.estado.toUpperCase(), margin + 115, y + 4);
 
-        doc.setTextColor(37, 99, 235);
-        doc.setFontSize(9);
-        doc.text(`$${pago.monto?.toLocaleString("es-CO")}`, W - margin, y + 2, { align: "right" });
+        doc.setTextColor(46, 46, 46);
+        doc.text(`$${pago.monto?.toLocaleString("es-CO")}`, W - margin - 3, y + 4, { align: "right" });
 
         totalPagado += pago.monto || 0;
-        y += 11;
+        y += 7;
       });
 
-      y += 3;
-      doc.setDrawColor(37, 99, 235);
-      doc.setLineWidth(0.5);
-      doc.line(margin, y, W - margin, y);
-      y += 6;
-      doc.setTextColor(17, 24, 39);
-      doc.setFontSize(10);
+      // Liquidación final con fondo suave --input-background
+      y += 4;
+      doc.setFillColor(247, 245, 246);
+      doc.roundedRect(W - margin - 60, y, 60, 14, 1.5, 1.5, "F");
+
+      doc.setTextColor(107, 107, 107);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.text("Total Liquidado:", W - margin - 56, y + 5);
+      doc.text("Costo Total Plan:", W - margin - 56, y + 10);
+
+      doc.setTextColor(123, 30, 58); // Resaltados en Granate
       doc.setFont("helvetica", "bold");
-      doc.text("Total pagado:", margin, y);
-      doc.setTextColor(37, 99, 235);
-      doc.text(`$${totalPagado.toLocaleString("es-CO")}`, W - margin, y, { align: "right" });
+      doc.setFontSize(8.5);
+      doc.text(`$${totalPagado.toLocaleString("es-CO")} COP`, W - margin - 4, y + 5, { align: "right" });
+      doc.text(`$${Number(detalle.precio_total ?? 0).toLocaleString("es-CO")} COP`, W - margin - 4, y + 10, { align: "right" });
     }
 
-    // FOOTER
-    doc.setFillColor(37, 99, 235);
-    doc.rect(0, 280, W, 17, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
+    // ── 4. GENERACIÓN DE QR + FOOTER CORPORATIVO ─────────────────────────────
+    const qrString = `ALECTOURS|RES-${detalle.id_reserva}|PAQ-${detalle.id_paquete}|CC-${clienteData.cedula}`;
+    const qrBase64 = await getQRBase64(qrString);
+
+    if (qrBase64) {
+      doc.addImage(qrBase64, "JPEG", W - margin - 26, 234, 26, 26);
+    }
+
+    doc.setTextColor(107, 107, 107);
     doc.setFont("helvetica", "normal");
-    doc.text("Este documento es un comprobante oficial de AlecTours.", W / 2, 286, { align: "center" });
-    doc.text("Para soporte: soporte@alectours.com", W / 2, 291, { align: "center" });
+    doc.setFontSize(7);
+    doc.text("Escanea este código QR en el counter o aeropuerto para la validación automática de tu pasadía/itinerario.", margin, 244);
+    doc.text("Documento digital verificado de forma segura a través del servidor centralizado de AlecTours.", margin, 247.5);
+
+    // Barra de cierre en gris profundo elegante (evitando negro plano)
+    doc.setFillColor(46, 46, 46); // #2E2E2E
+    doc.rect(0, 272, W, 25, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("¡Gracias por confiar en AlecTours para descubrir el mundo!", W / 2, 281, { align: "center" });
+
+    doc.setTextColor(200, 200, 200);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.text("Soporte Global: info@alectours.com  |  Bogotá, Colombia", W / 2, 286, { align: "center" });
 
     doc.save(`Comprobante_Reserva_${detalle.id_reserva}.pdf`);
   };
@@ -204,10 +262,10 @@ export default function ComprobantePDF({ reservaId, clienteData }: Props) {
     <button
       onClick={generarPDF}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all disabled:opacity-50"
+      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white rounded-xl text-xs font-semibold hover:opacity-95 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
     >
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-      {loading ? "Generando..." : "Descargar comprobante"}
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+      <span>{loading ? "Compilando comprobante..." : "Descargar comprobante"}</span>
     </button>
   );
 }

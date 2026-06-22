@@ -1,7 +1,7 @@
+import { ChevronDown, HelpCircle, MessageCircle, Search } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import { ChevronDown, HelpCircle, Search, MessageCircle } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 
 interface FAQItem {
   pregunta: string;
@@ -58,12 +58,12 @@ export default function FAQ() {
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Encabezado */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] bg-clip-text text-transparent mb-4">
             Preguntas Frecuentes
           </h1>
           <p className="text-gray-600 text-lg max-w-xl mx-auto">
@@ -72,7 +72,7 @@ export default function FAQ() {
         </motion.div>
 
         {/* Barra de Búsqueda */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative max-w-xl mx-auto mb-10"
@@ -83,7 +83,7 @@ export default function FAQ() {
             placeholder="Buscar pregunta o palabra clave..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent transition-all text-gray-800 placeholder-gray-400"
+            className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-md focus:outline-none focus:ring-2 focus:ring-[#7B1E3A] focus:border-transparent transition-all text-gray-800 placeholder-gray-400"
           />
         </motion.div>
 
@@ -95,11 +95,10 @@ export default function FAQ() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => { setActiveCategory(cat); setOpenIndex(null); }}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold capitalize transition-all ${
-                activeCategory === cat
-                  ? "bg-[#FF6B35] text-white shadow-md"
-                  : "bg-white text-gray-600 border border-gray-100 hover:bg-orange-50 hover:text-[#FF6B35]"
-              }`}
+              className={`px-5 py-2 rounded-xl text-sm font-semibold capitalize transition-all cursor-pointer ${activeCategory === cat
+                  ? "bg-[#7B1E3A] text-white shadow-md"
+                  : "bg-white text-gray-600 border border-gray-100 hover:bg-[#7B1E3A]/5 hover:text-[#7B1E3A]"
+                }`}
             >
               {cat === "all" ? "Ver Todas" : cat}
             </motion.button>
@@ -123,18 +122,18 @@ export default function FAQ() {
                   >
                     <button
                       onClick={() => toggleFAQ(index)}
-                      className="w-full flex items-center justify-between p-6 text-left group transition-colors hover:bg-orange-50/40"
+                      className="w-full flex items-center justify-between p-6 text-left group transition-colors hover:bg-[#7B1E3A]/5 cursor-pointer"
                     >
                       <div className="flex items-start gap-4 pr-4">
-                        <HelpCircle className={`w-6 h-6 mt-0.5 flex-shrink-0 transition-colors ${isOpen ? 'text-[#FF6B35]' : 'text-gray-400 group-hover:text-[#FF6B35]'}`} />
-                        <span className="font-bold text-gray-900 text-base md:text-lg group-hover:text-[#FF6B35] transition-colors">
+                        <HelpCircle className={`w-6 h-6 mt-0.5 flex-shrink-0 transition-colors ${isOpen ? 'text-[#7B1E3A]' : 'text-gray-400 group-hover:text-[#7B1E3A]'}`} />
+                        <span className="font-bold text-gray-900 text-base md:text-lg group-hover:text-[#7B1E3A] transition-colors">
                           {faq.pregunta}
                         </span>
                       </div>
                       <motion.div
                         animate={{ rotate: isOpen ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
-                        className={`p-2 rounded-xl flex-shrink-0 ${isOpen ? 'bg-[#FF6B35] text-white' : 'bg-gray-50 text-gray-500'}`}
+                        className={`p-2 rounded-xl flex-shrink-0 ${isOpen ? 'bg-[#7B1E3A] text-white' : 'bg-gray-50 text-gray-500'}`}
                       >
                         <ChevronDown className="w-5 h-5" />
                       </motion.div>
@@ -164,8 +163,8 @@ export default function FAQ() {
                 animate={{ opacity: 1 }}
                 className="bg-white rounded-3xl shadow-md p-12 text-center border border-gray-100"
               >
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-8 h-8 text-[#FF6B35]" />
+                <div className="w-16 h-16 bg-[#7B1E3A]/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-[#7B1E3A]" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">No encontramos resultados</h3>
                 <p className="text-gray-500">Intenta buscando con otros términos o seleccionando otra categoría.</p>
@@ -175,14 +174,14 @@ export default function FAQ() {
         </main>
 
         {/* Footer de Soporte Adicional */}
-        <motion.div 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          className="mt-16 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-3xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-16 bg-gradient-to-br from-[#7B1E3A] to-[#A13B55] rounded-3xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl"
         >
           <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              <MessageCircle className="w-6 h-6 text-white" />
+              <MessageCircle className="w-6 h-6 text-[#C9A227]" />
             </div>
             <div>
               <h3 className="text-xl font-bold">¿Aún tienes dudas?</h3>
@@ -192,7 +191,7 @@ export default function FAQ() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-6 py-3 bg-white text-[#FF6B35] font-bold rounded-xl text-sm shadow-md hover:bg-orange-50 transition-colors whitespace-nowrap"
+            className="px-6 py-3 bg-white text-[#7B1E3A] font-bold rounded-xl text-sm shadow-md hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"
           >
             Contactar Soporte
           </motion.button>

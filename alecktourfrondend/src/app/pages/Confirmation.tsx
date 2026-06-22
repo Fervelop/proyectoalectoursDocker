@@ -1,7 +1,8 @@
-import { useLocation, Link } from "react-router";
-import Navbar from "../components/Navbar";
-import { CheckCircle, Calendar, MapPin, Users, DollarSign } from "lucide-react";
+import { Calendar, CheckCircle, DollarSign, MapPin, Users } from "lucide-react";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router";
+import Navbar from "../components/Navbar";
 
 export default function Confirmation() {
   const location = useLocation();
@@ -16,11 +17,11 @@ export default function Confirmation() {
 
   if (!reserva || !hotel) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background transition-colors duration-200">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">No se encontró información de reserva</h1>
-          <Link to="/" className="inline-block mt-8 px-6 py-3 bg-[#2563EB] text-white rounded-lg">
+          <h1 className="text-2xl font-medium text-foreground">No se encontró información de la reserva</h1>
+          <Link to="/" className="inline-block mt-6 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 transition-all shadow-xs">
             Volver al inicio
           </Link>
         </div>
@@ -29,90 +30,129 @@ export default function Confirmation() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-16">
 
-        {/* Success Icon */}
+      <div className="max-w-3xl mx-auto px-4 py-12 md:py-16">
+
+        {/* Éxito - Estado de la Transacción */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
-            <CheckCircle className="w-12 h-12 text-green-600" />
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-green-500/10 rounded-full border border-green-500/20 mb-4"
+          >
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          </motion.div>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">¡Reserva confirmada!</h1>
+          <p className="text-muted-foreground text-sm mt-1">Tu viaje ha sido procesado y agendado exitosamente.</p>
+        </div>
+
+        {/* Tarjeta de Código de Reserva Principal */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-primary text-primary-foreground rounded-2xl p-6 md:p-8 mb-6 text-center shadow-md relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" />
+          <span className="text-xs font-bold uppercase tracking-widest opacity-80 block mb-2">Código localizador de reserva</span>
+          <p className="text-3xl md:text-4xl font-extrabold tracking-wider">{reservationCode}</p>
+          <div className="mt-4 pt-4 border-t border-primary-foreground/10 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs opacity-90">
+            <span>Referencia de pago: <span className="font-mono font-medium">{referencia}</span></span>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">¡Reserva confirmada!</h1>
-          <p className="text-xl text-gray-600">Tu viaje ha sido reservado exitosamente</p>
-        </div>
+        </motion.div>
 
-        {/* Reservation Code */}
-        <div className="bg-gradient-to-r from-[#2563EB] to-[#06B6D4] rounded-2xl p-8 mb-8 text-center">
-          <p className="text-white text-lg mb-2">Código de reserva</p>
-          <p className="text-4xl font-bold text-white tracking-wider">{reservationCode}</p>
-          <p className="text-white/80 text-sm mt-2">Referencia de pago: {referencia}</p>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
 
-        {/* Trip Details */}
-        <div className="bg-white rounded-2xl shadow-md p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Detalles del viaje</h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 text-gray-700">
-              <MapPin className="w-5 h-5 text-[#2563EB]" />
-              <div>
-                <p className="font-bold text-lg">{hotel.nombre_hotel}</p>
-                <p className="text-gray-500">{hotel.ciudad}, {hotel.pais}</p>
+          {/* Detalles del viaje */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-card rounded-xl border border-border p-6 shadow-xs md:col-span-3 space-y-5"
+          >
+            <h2 className="text-lg font-semibold text-foreground border-b border-border pb-3">Detalles de la estadía</h2>
+
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 text-primary shrink-0 mt-1" />
+                <div>
+                  <p className="font-bold text-sm md:text-base text-foreground leading-tight">{hotel.nombre_hotel}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{hotel.ciudad}, {hotel.pais}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-sm font-medium text-foreground">
+                  {people} {people === 1 ? 'Viajero inscrito' : 'Viajeros inscritos'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-sm font-medium text-foreground">
+                  {new Date(reserva.fecha_inicio).toLocaleDateString('es-CO', { dateStyle: 'medium' })}
+                  <span className="text-muted-foreground mx-1">→</span>
+                  {new Date(reserva.fecha_fin).toLocaleDateString('es-CO', { dateStyle: 'medium' })}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-sm font-medium text-foreground">
+                  ID Reserva: <span className="font-mono text-muted-foreground">#{reserva.id_reserva}</span>
+                  <span className="mx-1.5 text-border">·</span>
+                  Estado: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/10 text-green-500 border border-green-500/20 capitalize">{reserva.estado}</span>
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-3 text-gray-700">
-              <Users className="w-5 h-5 text-[#2563EB]" />
-              <span>{people} {people === 1 ? 'persona' : 'personas'}</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-700">
-              <Calendar className="w-5 h-5 text-[#2563EB]" />
-              <span>
-                {new Date(reserva.fecha_inicio).toLocaleDateString('es-CO')} → {new Date(reserva.fecha_fin).toLocaleDateString('es-CO')}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-700">
-              <DollarSign className="w-5 h-5 text-[#2563EB]" />
-              <span>Reserva #{reserva.id_reserva} · Estado: <span className="font-semibold capitalize">{reserva.estado}</span></span>
-            </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* Payment Summary */}
-        <div className="bg-white rounded-2xl shadow-md p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Resumen de pago</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Precio total</span>
-              <span className="font-semibold">${totalPrice.toLocaleString('es-CO')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Pagado ahora</span>
-              <span className="font-semibold text-green-600">${paymentAmount.toLocaleString('es-CO')}</span>
-            </div>
-            {paymentOption === 'partial' && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Saldo pendiente</span>
-                <span className="font-semibold text-[#F59E0B]">${(totalPrice - paymentAmount).toLocaleString('es-CO')}</span>
+          {/* Desglose Financiero */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-card rounded-xl border border-border p-6 shadow-xs md:col-span-2 space-y-4"
+          >
+            <h2 className="text-lg font-semibold text-foreground border-b border-border pb-3">Resumen financiero</h2>
+
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Monto total</span>
+                <span className="font-medium text-foreground">${totalPrice.toLocaleString('es-CO')}</span>
               </div>
-            )}
-          </div>
-          {paymentOption === 'partial' && (
-            <div className="mt-6 p-4 bg-orange-50 rounded-lg">
-              <p className="text-sm text-[#F59E0B]">
-                <strong>Nota:</strong> El saldo restante debe pagarse al menos 15 días antes del viaje.
-              </p>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Abonado hoy</span>
+                <span className="font-bold text-green-500">${paymentAmount.toLocaleString('es-CO')}</span>
+              </div>
+
+              {paymentOption === 'partial' && (
+                <>
+                  <div className="flex justify-between items-center pt-2 border-t border-dashed border-border mt-2">
+                    <span className="text-muted-foreground">Saldo pendiente</span>
+                    <span className="font-bold text-chart-2">${(totalPrice - paymentAmount).toLocaleString('es-CO')}</span>
+                  </div>
+                  <div className="mt-4 p-3 bg-chart-2/5 rounded-xl border border-chart-2/10">
+                    <p className="text-[11px] text-muted-foreground leading-normal">
+                      <strong className="text-chart-2 font-semibold">Importante:</strong> El importe restante debe liquidarse de manera obligatoria en tu módulo de cliente hasta 15 días previos a la llegada.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </motion.div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        {/* Botones de acción final */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-8">
           <Link to="/profile"
-            className="flex-1 py-4 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white text-center font-semibold rounded-xl hover:shadow-xl transition-all duration-300">
+            className="flex-1 py-3 px-4 bg-card hover:bg-muted border border-border text-foreground text-center text-sm font-semibold rounded-xl transition-all shadow-xs">
             Ver mis reservas
           </Link>
           <Link to="/"
-            className="flex-1 py-4 border-2 border-[#2563EB] text-[#2563EB] text-center font-semibold rounded-xl hover:bg-blue-50 transition-all duration-300">
+            className="flex-1 py-3 px-4 bg-primary text-primary-foreground text-center text-sm font-semibold rounded-xl hover:opacity-95 transition-all shadow-sm">
             Volver al inicio
           </Link>
         </div>

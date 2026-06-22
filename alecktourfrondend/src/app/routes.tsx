@@ -11,6 +11,7 @@ import Corporate from "./pages/Corporate";
 import FAQ from "./pages/faq";
 import Home from "./pages/Home";
 import HotelDetail from "./pages/HotelDetail";
+import NotFound from "./pages/NotFound";
 import PackageDetail from "./pages/PackageDetail";
 import Personalization from "./pages/Personalization";
 import PreferencesForm from "./pages/PreferencesForm";
@@ -20,7 +21,6 @@ import ResetPassword from "./pages/ResetPassword";
 import SearchResults from "./pages/SearchResults";
 import TravelInfo from "./pages/TravelInfo";
 import VerifyEmail from "./pages/VerifyEmail";
-
 export const router = createBrowserRouter([
   {
     Component: RootLayout,
@@ -40,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "/faq", Component: FAQ },
       { path: "/contact", Component: Contact },
       { path: "/reset-password", Component: ResetPassword },
+      { path: "*", Component: NotFound },
 
       // Rutas protegidas (requieren login)
       {

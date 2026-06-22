@@ -1,22 +1,35 @@
-import { Link } from "react-router";
 import {
-  Plane, Calendar, Wallet, ChevronRight, CheckCircle,
-  XCircle, AlertCircle, Clock, Users, Moon,
-  TrendingUp, CreditCard, Ban, SendHorizonal, MessageSquare,
-  Sunrise, Sunset, Timer, Filter, Search,
+  AlertCircle,
+  Ban,
+  Calendar,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Filter,
+  Loader2,
+  MessageSquare,
+  Moon,
+  Plane,
+  Search,
+  SendHorizonal,
+  Sunrise, Sunset, Timer,
+  TrendingUp,
+  Users,
+  XCircle
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { useState, useMemo } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { ClienteResponse } from "../../services/cliente.service";
 import ComprobantePDF from "./ComprobantePDF";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const estadoConfig: Record<string, { color: string; bg: string; icon: any; label: string }> = {
-  confirmada:             { color: "text-green-700",  bg: "bg-green-50 border-green-200",   icon: CheckCircle, label: "Confirmada"              },
-  pendiente:              { color: "text-orange-700", bg: "bg-orange-50 border-orange-200", icon: AlertCircle, label: "Pendiente"               },
-  cancelada:              { color: "text-red-700",    bg: "bg-red-50 border-red-200",       icon: XCircle,     label: "Cancelada"               },
-  finalizada:             { color: "text-gray-600",   bg: "bg-gray-50 border-gray-200",     icon: CheckCircle, label: "Finalizada"              },
-  cancelacion_solicitada: { color: "text-purple-700", bg: "bg-purple-50 border-purple-200", icon: Clock,       label: "Cancelación solicitada"  },
+  confirmada: { color: "text-green-600 dark:text-green-400 border-green-500/20", bg: "bg-green-500/10", icon: CheckCircle, label: "Confirmada" },
+  pendiente: { color: "text-amber-600 dark:text-amber-400 border-amber-500/20", bg: "bg-amber-500/10", icon: AlertCircle, label: "Pendiente" },
+  cancelada: { color: "text-destructive border-destructive/20", bg: "bg-destructive/10", icon: XCircle, label: "Cancelada" },
+  finalizada: { color: "text-muted-foreground border-border", bg: "bg-muted", icon: CheckCircle, label: "Finalizada" },
+  cancelacion_solicitada: { color: "text-purple-600 dark:text-purple-400 border-purple-500/20", bg: "bg-purple-500/10", icon: Clock, label: "Cancelación en trámite" },
 };
 
 const MOTIVOS = [
@@ -34,45 +47,14 @@ const nights = (a: string, b: string) =>
 const fmt = (d: string, opts?: Intl.DateTimeFormatOptions) =>
   new Date(d).toLocaleDateString("es-CO", opts ?? { day: "numeric", month: "short", year: "numeric" });
 
-// ── Tokens ─────────────────────────────────────────────────────────────────
-const tk = {
-  white:        "#ffffff",
-  surface:      "#f8fafc",
-  surfaceHov:   "#f1f5f9",
-  border:       "#e5e7eb",
-  borderLight:  "#f1f5f9",
-  text:         "#111827",
-  textSub:      "#6b7280",
-  textMuted:    "#9ca3af",
-  textHint:     "#d1d5db",
-  blue:         "#2563EB",
-  blueLight:    "#eff6ff",
-  blueBorder:   "#bfdbfe",
-  blueText:     "#1d4ed8",
-  cyan:         "#0ea5e9",
-  green:        "#16a34a",
-  greenLight:   "#f0fdf4",
-  greenBorder:  "#bbf7d0",
-  orange:       "#f97316",
-  orangeLight:  "#fff7ed",
-  orangeBorder: "#fed7aa",
-  orangeText:   "#c2410c",
-  red:          "#dc2626",
-  redLight:     "#fef2f2",
-  redBorder:    "#fecaca",
-  purple:       "#7e22ce",
-  purpleLight:  "#faf5ff",
-  purpleBorder: "#e9d5ff",
-};
-
 // ── Modal cancelación ──────────────────────────────────────────────────────
 interface ModalProps { reserva: any; onClose: () => void; onConfirm: (id: number, motivo: string) => void; }
 
 function ModalCancelacion({ reserva, onClose, onConfirm }: ModalProps) {
-  const [motivo, setMotivo]             = useState("");
+  const [motivo, setMotivo] = useState("");
   const [motivoCustom, setMotivoCustom] = useState("");
-  const [enviando, setEnviando]         = useState(false);
-  const [enviado, setEnviado]           = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
   const motivoFinal = motivo === "Otro motivo" ? motivoCustom : motivo;
 
   const handleEnviar = async () => {
@@ -87,38 +69,38 @@ function ModalCancelacion({ reserva, onClose, onConfirm }: ModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="bg-gradient-to-r from-red-500 to-rose-500 p-6 text-white">
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        className="relative bg-card text-card-foreground border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden transition-colors duration-200">
+        <div className="bg-destructive p-6 text-destructive-foreground">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
               <XCircle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">Solicitar cancelación</h3>
-              <p className="text-red-100 text-sm">Reserva #{reserva.id_reserva}</p>
+              <h3 className="font-bold text-lg tracking-tight">Solicitar cancelación</h3>
+              <p className="text-destructive-foreground/80 text-xs">Reserva asignada #{reserva.id_reserva}</p>
             </div>
           </div>
         </div>
         <div className="p-6">
           {!enviado ? (
             <>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-sm text-amber-800">
-                <p className="font-semibold mb-1">⚠️ Ten en cuenta</p>
-                <p>Tu solicitud será revisada por nuestro equipo. Te notificaremos por correo cuando sea procesada.</p>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-5 text-xs text-amber-600 dark:text-amber-400">
+                <p className="font-bold mb-0.5">⚠️ Información importante</p>
+                <p className="leading-relaxed">Tu solicitud será evaluada bajo las políticas de la agencia. Se enviará un correo con la resolución.</p>
               </div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                <MessageSquare className="w-4 h-4" /> Motivo de cancelación
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" /> Selecciona el motivo
               </label>
               <div className="space-y-2 mb-4">
                 {MOTIVOS.map(m => (
-                  <label key={m} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all
-                    ${motivo === m ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}>
+                  <label key={m} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all text-sm
+                    ${motivo === m ? "border-primary bg-primary/5 text-foreground font-medium" : "border-border hover:bg-muted/50 text-muted-foreground"}`}>
                     <input type="radio" name="motivo" value={m} checked={motivo === m}
-                      onChange={() => setMotivo(m)} className="accent-red-500" />
-                    <span className="text-sm text-gray-700">{m}</span>
+                      onChange={() => setMotivo(m)} className="accent-primary" />
+                    <span>{m}</span>
                   </label>
                 ))}
               </div>
@@ -127,32 +109,32 @@ function ModalCancelacion({ reserva, onClose, onConfirm }: ModalProps) {
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-4">
                     <textarea value={motivoCustom} onChange={e => setMotivoCustom(e.target.value)}
-                      placeholder="Cuéntanos más..." rows={3}
-                      className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-700 focus:outline-none focus:border-red-400 resize-none" />
+                      placeholder="Por favor, detalla los motivos del cambio..." rows={3}
+                      className="w-full border border-border bg-muted/30 text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none" />
                   </motion.div>
                 )}
               </AnimatePresence>
               <div className="flex gap-3">
                 <button onClick={onClose}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all">
+                  className="flex-1 py-2.5 border border-border text-muted-foreground rounded-lg text-sm font-medium hover:bg-muted hover:text-foreground transition-all">
                   Volver
                 </button>
                 <button onClick={handleEnviar} disabled={!motivoFinal.trim() || enviando}
-                  className="flex-1 py-2.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   {enviando
-                    ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Enviando...</>
-                    : <><SendHorizonal className="w-4 h-4" />Enviar solicitud</>}
+                    ? <><Loader2 className="w-4 h-4 animate-spin" />Procesando...</>
+                    : <><SendHorizonal className="w-4 h-4" />Enviar Solicitud</>}
                 </button>
               </div>
             </>
           ) : (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               className="py-8 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="w-14 h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-7 h-7 text-green-500" />
               </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">¡Solicitud enviada!</h4>
-              <p className="text-gray-500 text-sm">Nuestro equipo la procesará pronto y te avisará por correo.</p>
+              <h4 className="text-base font-bold text-foreground mb-1">¡Solicitud recibida correctamente!</h4>
+              <p className="text-muted-foreground text-xs px-4">Hemos registrado tu caso. Te contactaremos vía correo electrónico a la brevedad.</p>
             </motion.div>
           )}
         </div>
@@ -163,162 +145,133 @@ function ModalCancelacion({ reserva, onClose, onConfirm }: ModalProps) {
 
 // ── Calendario visual ──────────────────────────────────────────────────────
 function CalendarioViaje({ proxima, diasRestantes }: { proxima: any; diasRestantes: number }) {
-  const ini          = new Date(proxima.fecha_inicio);
-  const fin          = new Date(proxima.fecha_fin);
-  const year         = ini.getFullYear();
-  const month        = ini.getMonth();
-  const firstDay     = new Date(year, month, 1).getDay();
-  const daysInMonth  = new Date(year, month + 1, 0).getDate();
-  const checkIn      = ini.getDate();
-  const checkOut     = fin.getDate();
-  const monthName    = ini.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
-  const noches       = nights(proxima.fecha_inicio, proxima.fecha_fin);
-  const ahora        = new Date();
-  const hoyDia       = ahora.getDate();
-  const hoyMes       = ahora.getMonth();
-  const esEsteMes    = hoyMes === month;
+  const ini = new Date(proxima.fecha_inicio);
+  const fin = new Date(proxima.fecha_fin);
+  const year = ini.getFullYear();
+  const month = ini.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const checkIn = ini.getDate();
+  const checkOut = fin.getDate();
+  const monthName = ini.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
+  const noches = nights(proxima.fecha_inicio, proxima.fecha_fin);
+  const ahora = new Date();
+  const hoyDia = ahora.getDate();
+  const hoyMes = ahora.getMonth();
+  const esEsteMes = hoyMes === month;
 
   const urgencia =
-    diasRestantes === 0 ? { label: "¡Tu viaje es hoy! Buen vuelo ✈️",  color: tk.green,  bg: tk.greenLight,  border: tk.greenBorder  } :
-    diasRestantes <= 3  ? { label: `¡Solo faltan ${diasRestantes} días!`, color: tk.orange, bg: tk.orangeLight, border: tk.orangeBorder } :
-    diasRestantes <= 14 ? { label: `Faltan ${diasRestantes} días para tu viaje`, color: tk.blue,   bg: tk.blueLight,   border: tk.blueBorder   } :
-                          { label: `${diasRestantes} días para el viaje`,         color: tk.textSub, bg: tk.surface,     border: tk.border       };
+    diasRestantes === 0 ? { label: "¡Tu itinerario inicia hoy! Buen viaje ✈️", className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" } :
+      diasRestantes <= 3 ? { label: `¡Atención, faltan solo ${diasRestantes} días!`, className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" } :
+        { label: `Faltan ${diasRestantes} días para el inicio del viaje`, className: "bg-muted/80 text-muted-foreground border-border" };
 
   return (
-    <div style={{ background: tk.white, borderRadius: 20, border: `0.5px solid ${tk.border}`, overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-
-      {/* Header azul */}
-      <div style={{ background: tk.blue, padding: "20px 22px 18px", color: "#fff" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+    <div className="bg-card text-card-foreground border border-border rounded-xl shadow-md overflow-hidden transition-colors duration-200">
+      {/* Banner Principal */}
+      <div className="bg-gradient-to-br from-primary via-primary/95 to-primary/90 p-5 text-primary-foreground">
+        <div className="flex items-start justify-between mb-4">
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.65, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 4 }}>
-              Próximo viaje
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>Paquete #{proxima.id_paquete}</div>
-            <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4 }}>Reserva #{proxima.id_reserva}</div>
+            <span className="text-[10px] font-bold uppercase tracking-wider opacity-75">Próximo Itinerario</span>
+            <h3 className="text-xl font-bold tracking-tight leading-tight">Paquete Turístico #{proxima.id_paquete}</h3>
+            <p className="text-xs opacity-70 mt-0.5">Identificador de Reserva: #{proxima.id_reserva}</p>
           </div>
-          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: "10px 14px" }}>
-            <div style={{ fontSize: 42, fontWeight: 900, lineHeight: 1 }}>{diasRestantes}</div>
-            <div style={{ fontSize: 10, opacity: 0.7, marginTop: 3 }}>días restantes</div>
+          <div className="text-center bg-white/10 rounded-xl px-3.5 py-2 border border-white/10">
+            <span className="block text-3xl font-black leading-none">{diasRestantes}</span>
+            <span className="text-[9px] font-medium tracking-wide uppercase opacity-80 block mt-1">días para irte</span>
           </div>
         </div>
 
-        {/* Barra vuelo */}
-        <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px 16px" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, opacity: 0.65, marginBottom: 4 }}>
-              <Sunrise style={{ width: 12, height: 12 }} />
-              <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Check-in</span>
+        {/* Info Check-in / Check-out */}
+        <div className="grid grid-cols-7 items-center bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+          <div className="col-span-3 text-left pl-1">
+            <div className="flex items-center gap-1 opacity-70 text-[9px] font-bold uppercase tracking-wider mb-0.5">
+              <Sunrise className="w-3 h-3" /> Check-in
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>
-              {fmt(proxima.fecha_inicio, { weekday: "short", day: "numeric", month: "short" })}
-            </div>
+            <p className="text-sm font-bold truncate">{fmt(proxima.fecha_inicio, { weekday: "short", day: "numeric", month: "short" })}</p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "0 14px", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 28, height: 1, background: "rgba(255,255,255,0.35)" }} />
-              <Plane style={{ width: 16, height: 16, opacity: 0.9 }} />
-              <div style={{ width: 28, height: 1, background: "rgba(255,255,255,0.35)" }} />
-            </div>
-            <span style={{ fontSize: 10, opacity: 0.6 }}>{noches} noche{noches !== 1 ? "s" : ""}</span>
+          <div className="col-span-1 flex flex-col items-center justify-center gap-0.5 opacity-80">
+            <Plane className="w-4 h-4 rotate-45 text-primary-foreground/90" />
+            <span className="text-[9px] font-semibold tracking-tight">{noches} {noches === 1 ? "noche" : "noches"}</span>
           </div>
-          <div style={{ flex: 1, textAlign: "right" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 5, opacity: 0.65, marginBottom: 4 }}>
-              <Sunset style={{ width: 12, height: 12 }} />
-              <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Check-out</span>
+          <div className="col-span-3 text-right pr-1">
+            <div className="flex items-center justify-end gap-1 opacity-70 text-[9px] font-bold uppercase tracking-wider mb-0.5">
+              <Sunset className="w-3 h-3" /> Check-out
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>
-              {fmt(proxima.fecha_fin, { weekday: "short", day: "numeric", month: "short" })}
-            </div>
+            <p className="text-sm font-bold truncate">{fmt(proxima.fecha_fin, { weekday: "short", day: "numeric", month: "short" })}</p>
           </div>
         </div>
       </div>
 
-      {/* Countdown badge */}
-      <div style={{ padding: "14px 20px 0" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: urgencia.bg, border: `0.5px solid ${urgencia.border}`, borderRadius: 12, padding: "10px 16px" }}>
-          <Timer style={{ width: 14, height: 14, color: urgencia.color, flexShrink: 0 }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: urgencia.color }}>{urgencia.label}</span>
+      {/* Countdown Badge */}
+      <div className="px-5 pt-4">
+        <div className={`flex items-center justify-center gap-2 border rounded-lg py-2 px-3 text-xs font-semibold ${urgencia.className}`}>
+          <Timer className="w-3.5 h-3.5 shrink-0" />
+          <span>{urgencia.label}</span>
         </div>
       </div>
 
-      {/* Calendario */}
-      <div style={{ padding: "18px 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: tk.text, textTransform: "capitalize" }}>{monthName}</span>
-          <div style={{ display: "flex", gap: 10 }}>
-            {[
-              { dot: tk.blue,       label: "Entrada"  },
-              { dot: tk.cyan,       label: "Salida"   },
-              { dot: tk.blueLight,  label: "Estancia", border: tk.blueBorder },
-            ].map(l => (
-              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ width: l.label === "Estancia" ? 12 : 8, height: l.label === "Estancia" ? 8 : 8, borderRadius: l.label === "Estancia" ? 3 : "50%", background: l.dot, border: l.border ? `0.5px solid ${l.border}` : "none", display: "inline-block", flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: tk.textMuted }}>{l.label}</span>
-              </div>
-            ))}
+      {/* Matriz del Calendario */}
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-4 border-b border-border/60 pb-2">
+          <span className="text-sm font-bold text-foreground capitalize">{monthName}</span>
+          <div className="flex gap-3 text-[10px] font-medium text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary" /> <span>Inicio</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" /> <span>Fin</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-3 h-2 rounded bg-primary/10 border border-primary/20" /> <span>Estancia</span>
+            </div>
           </div>
         </div>
 
-        {/* Días semana */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", textAlign: "center", marginBottom: 6 }}>
-          {["D","L","M","X","J","V","S"].map(d => (
-            <span key={d} style={{ fontSize: 10, fontWeight: 600, color: tk.textHint }}>{d}</span>
+        <div className="grid grid-cols-7 text-center mb-2">
+          {["D", "L", "M", "X", "J", "V", "S"].map(d => (
+            <span key={d} className="text-[10px] font-bold text-muted-foreground/60">{d}</span>
           ))}
         </div>
 
-        {/* Celdas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px 0" }}>
-          {Array.from({ length: firstDay }).map((_, i) => <span key={`e-${i}`} />)}
+        <div className="grid grid-cols-7 gap-y-1.5 justify-items-center text-center">
+          {Array.from({ length: firstDay }).map((_, i) => <span key={`e-${i}`} className="w-8 h-8" />)}
           {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day     = i + 1;
-            const isIn    = day === checkIn;
-            const isOut   = day === checkOut;
+            const day = i + 1;
+            const isIn = day === checkIn;
+            const isOut = day === checkOut;
             const inRange = day > checkIn && day < checkOut;
-            const isHoy   = esEsteMes && day === hoyDia && !isIn && !isOut && !inRange;
+            const isHoy = esEsteMes && day === hoyDia && !isIn && !isOut && !inRange;
 
-            const cellStyle: React.CSSProperties = {
-              fontSize: 11,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: 30, height: 30, margin: "0 auto",
-              borderRadius: "50%",
-              fontWeight: 400,
-              color: tk.textSub,
-              position: "relative",
-              transition: "all 0.1s",
-            };
+            let cellClass = "w-8 h-8 flex items-center justify-center text-xs rounded-full transition-all relative text-muted-foreground ";
 
-            if (isIn)    Object.assign(cellStyle, { background: tk.blue,      color: "#fff",        fontWeight: 700 });
-            if (isOut)   Object.assign(cellStyle, { background: tk.cyan,      color: "#fff",        fontWeight: 700 });
-            if (inRange) Object.assign(cellStyle, { background: tk.blueLight, color: tk.blueText,   fontWeight: 500, borderRadius: "6px" });
-            if (isHoy)   Object.assign(cellStyle, { boxShadow: `0 0 0 2px ${tk.blue}`,              color: tk.blue,  fontWeight: 600 });
+            if (isIn) cellClass += "bg-primary text-primary-foreground font-bold shadow-sm";
+            else if (isOut) cellClass += "bg-cyan-500 text-white font-bold shadow-sm";
+            else if (inRange) cellClass += "bg-primary/10 text-primary font-medium rounded-md w-full";
+            else if (isHoy) cellClass += "ring-2 ring-primary text-primary font-bold";
+            else cellClass += "hover:bg-muted text-foreground";
 
             return (
-              <span key={day} style={cellStyle}>
+              <span key={day} className={cellClass}>
                 {day}
                 {(isIn || isOut) && (
-                  <span style={{
-                    position: "absolute", bottom: 2, left: "50%", transform: "translateX(-50%)",
-                    width: 4, height: 4, borderRadius: "50%",
-                    background: "#fff", opacity: 0.7,
-                  }} />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/60" />
                 )}
               </span>
             );
           })}
         </div>
 
-        {/* Mini stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
+        {/* Mini Stats Inferiores */}
+        <div className="grid grid-cols-3 gap-3 mt-5">
           {[
-            { icon: Moon,  label: "Noches",    value: noches,                           color: tk.blue   },
-            { icon: Users, label: "Personas",  value: proxima.numero_personas ?? "–",   color: tk.cyan   },
-            { icon: Timer, label: "Días faltan", value: diasRestantes,                  color: diasRestantes <= 3 ? tk.orange : tk.green },
+            { icon: Moon, label: "Noches", value: noches, color: "text-primary bg-primary/5 border-primary/10" },
+            { icon: Users, label: "Viajeros", value: proxima.numero_personas ?? "–", color: "text-cyan-500 bg-cyan-500/5 border-cyan-500/10" },
+            { icon: Timer, label: "Faltan", value: `${diasRestantes}d`, color: diasRestantes <= 3 ? "text-amber-500 bg-amber-500/5 border-amber-500/10" : "text-green-500 bg-green-500/5 border-green-500/10" },
           ].map(s => (
-            <div key={s.label} style={{ background: tk.surface, border: `0.5px solid ${tk.border}`, borderRadius: 12, padding: "10px 6px", textAlign: "center" }}>
-              <s.icon style={{ width: 14, height: 14, color: s.color, margin: "0 auto 4px" }} />
-              <p style={{ fontSize: 18, fontWeight: 800, color: s.color, margin: 0, lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 10, color: tk.textMuted, margin: "3px 0 0" }}>{s.label}</p>
+            <div key={s.label} className={`border rounded-xl p-3 text-center transition-colors ${s.color}`}>
+              <s.icon className="w-3.5 h-3.5 mx-auto mb-1 opacity-80" />
+              <p className="text-base font-bold tracking-tight leading-none">{s.value}</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mt-1.5">{s.label}</p>
             </div>
           ))}
         </div>
@@ -327,16 +280,16 @@ function CalendarioViaje({ proxima, diasRestantes }: { proxima: any; diasRestant
   );
 }
 
-// ── Section header ─────────────────────────────────────────────────────────
+// ── Section Header ─────────────────────────────────────────────────────────
 function SectionHeader({ title, subtitle, icon: Icon }: { title: string; subtitle?: string; icon: any }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-      <div style={{ width: 36, height: 36, borderRadius: 10, background: tk.blueLight, border: `0.5px solid ${tk.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Icon style={{ width: 17, height: 17, color: tk.blue }} />
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-9 h-9 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-primary" />
       </div>
       <div>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: tk.text, margin: 0 }}>{title}</h2>
-        {subtitle && <p style={{ fontSize: 12, color: tk.textMuted, margin: 0 }}>{subtitle}</p>}
+        <h2 className="text-base font-bold text-foreground tracking-tight leading-tight">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
     </div>
   );
@@ -345,12 +298,12 @@ function SectionHeader({ title, subtitle, icon: Icon }: { title: string; subtitl
 // ── Filtro de reservas ─────────────────────────────────────────────────────
 type FiltroEstado = "todas" | "confirmada" | "pendiente" | "finalizada" | "cancelada";
 
-const filtroOpciones: { value: FiltroEstado; label: string; icon: any; color: string; activeBg: string; activeBorder: string; activeColor: string }[] = [
-  { value: "todas",      label: "Todas",       icon: Filter,       color: tk.textSub,    activeBg: tk.blue,         activeBorder: tk.blue,         activeColor: "#fff"        },
-  { value: "confirmada", label: "Confirmadas", icon: CheckCircle,  color: tk.green,      activeBg: tk.greenLight,   activeBorder: tk.greenBorder,  activeColor: tk.green      },
-  { value: "pendiente",  label: "Pendientes",  icon: AlertCircle,  color: tk.orangeText, activeBg: tk.orangeLight,  activeBorder: tk.orangeBorder, activeColor: tk.orangeText },
-  { value: "finalizada", label: "Finalizadas", icon: Plane,        color: tk.textSub,    activeBg: tk.surface,      activeBorder: tk.border,       activeColor: tk.textSub    },
-  { value: "cancelada",  label: "Canceladas",  icon: XCircle,      color: tk.red,        activeBg: tk.redLight,     activeBorder: tk.redBorder,    activeColor: tk.red        },
+const filtroOpciones: { value: FiltroEstado; label: string; icon: any; activeClass: string }[] = [
+  { value: "todas", label: "Todas", icon: Filter, activeClass: "bg-primary text-primary-foreground border-primary" },
+  { value: "confirmada", label: "Confirmadas", icon: CheckCircle, activeClass: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30" },
+  { value: "pendiente", label: "Pendientes", icon: AlertCircle, activeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+  { value: "finalizada", label: "Finalizadas", icon: Plane, activeClass: "bg-muted text-foreground border-border" },
+  { value: "cancelada", label: "Canceladas", icon: XCircle, activeClass: "bg-destructive/10 text-destructive border-destructive/30" },
 ];
 
 function FiltroBar({
@@ -363,51 +316,31 @@ function FiltroBar({
   counts: Record<FiltroEstado, number>;
 }) {
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div className="space-y-3 mb-5">
       {/* Buscador */}
-      <div style={{ position: "relative", marginBottom: 10 }}>
-        <Search style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: tk.textMuted, pointerEvents: "none" }} />
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
         <input
           type="text"
-          placeholder="Buscar por paquete, reserva o fecha..."
+          placeholder="Buscar por código de paquete, reserva o fechas..."
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
-          style={{
-            width: "100%", boxSizing: "border-box",
-            padding: "10px 14px 10px 36px",
-            fontSize: 13, color: tk.text,
-            background: tk.white, border: `0.5px solid ${tk.border}`,
-            borderRadius: 12, outline: "none",
-          }}
-          onFocus={e  => (e.target.style.borderColor = tk.blue)}
-          onBlur={e   => (e.target.style.borderColor = tk.border)}
+          className="w-full pl-10 pr-4 py-2 text-sm bg-muted/30 border border-border text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/50"
         />
       </div>
 
-      {/* Pills de estado */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {/* Pills */}
+      <div className="flex gap-2 flex-wrap">
         {filtroOpciones.map(op => {
           const active = filtro === op.value;
-          const count  = counts[op.value];
+          const count = counts[op.value];
           return (
             <button key={op.value} onClick={() => setFiltro(op.value)}
-              style={{
-                display: "flex", alignItems: "center", gap: 5,
-                padding: "6px 12px", borderRadius: 20, border: `0.5px solid`,
-                fontSize: 12, fontWeight: 500, cursor: "pointer",
-                transition: "all 0.15s",
-                background:   active ? op.activeBg     : tk.white,
-                borderColor:  active ? op.activeBorder : tk.border,
-                color:        active ? op.activeColor  : tk.textSub,
-              }}>
-              <op.icon style={{ width: 12, height: 12 }} />
-              {op.label}
-              <span style={{
-                fontSize: 10, fontWeight: 700,
-                background: active ? "rgba(0,0,0,0.1)" : tk.surface,
-                borderRadius: 20, padding: "1px 6px",
-                color: active ? "inherit" : tk.textMuted,
-              }}>
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all duration-150 cursor-pointer
+                ${active ? op.activeClass : "bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+              <op.icon className="w-3.5 h-3.5" />
+              <span>{op.label}</span>
+              <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ml-0.5 ${active ? "bg-foreground/10 text-inherit" : "bg-muted text-muted-foreground"}`}>
                 {count}
               </span>
             </button>
@@ -418,7 +351,7 @@ function FiltroBar({
   );
 }
 
-// ── Componente principal ───────────────────────────────────────────────────
+// ── Componente Principal ───────────────────────────────────────────────────
 interface Props {
   reservas: any[];
   loading: boolean;
@@ -428,15 +361,14 @@ interface Props {
 }
 
 export default function TabReservas({ reservas, loading, reservaExpandida, setReservaExpandida, clienteData }: Props) {
-  const [modalReserva, setModalReserva]     = useState<any | null>(null);
-  const [solicitadas, setSolicitadas]       = useState<Record<number, string>>({});
-  const [filtro, setFiltro]                 = useState<FiltroEstado>("todas");
-  const [busqueda, setBusqueda]             = useState("");
+  const [modalReserva, setModalReserva] = useState<any | null>(null);
+  const [solicitadas, setSolicitadas] = useState<Record<number, string>>({});
+  const [filtro, setFiltro] = useState<FiltroEstado>("todas");
+  const [busqueda, setBusqueda] = useState("");
 
   const handleCancelacionConfirmada = (id: number, motivo: string) =>
     setSolicitadas(prev => ({ ...prev, [id]: motivo }));
 
-  // ── Fix fecha: comparar sin horas ──────────────────────────────────────
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
@@ -444,22 +376,20 @@ export default function TabReservas({ reservas, loading, reservaExpandida, setRe
     reservas
       .filter(r => r.estado !== "cancelada" && new Date(r.fecha_inicio) >= hoy)
       .sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime())[0]
-  , [reservas]);
+    , [reservas]);
 
   const diasRestantes = proxima
     ? Math.ceil((new Date(proxima.fecha_inicio).getTime() - hoy.getTime()) / 86400000)
     : null;
 
-  // ── Stats ──────────────────────────────────────────────────────────────
   const counts: Record<FiltroEstado, number> = useMemo(() => ({
-    todas:      reservas.length,
+    todas: reservas.length,
     confirmada: reservas.filter(r => r.estado === "confirmada").length,
-    pendiente:  reservas.filter(r => r.estado === "pendiente").length,
+    pendiente: reservas.filter(r => r.estado === "pendiente").length,
     finalizada: reservas.filter(r => r.estado === "finalizada").length,
-    cancelada:  reservas.filter(r => r.estado === "cancelada").length,
+    cancelada: reservas.filter(r => r.estado === "cancelada").length,
   }), [reservas]);
 
-  // ── Filtrado + búsqueda ────────────────────────────────────────────────
   const reservasFiltradas = useMemo(() => {
     let lista = filtro === "todas" ? reservas : reservas.filter(r => r.estado === filtro);
     if (busqueda.trim()) {
@@ -483,62 +413,61 @@ export default function TabReservas({ reservas, loading, reservaExpandida, setRe
         )}
       </AnimatePresence>
 
-      {/* Título */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: tk.text, margin: "0 0 4px" }}>Mis Reservas</h1>
-        <p style={{ fontSize: 14, color: tk.textMuted, margin: 0 }}>Gestiona todos tus viajes reservados</p>
+      {/* Header General */}
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight text-white">Mis Reservas</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Monitorea y gestiona el estado de tus itinerarios contratados</p>
       </div>
 
       {loading ? (
-        <div style={{ background: tk.white, borderRadius: 20, padding: 48, textAlign: "center", border: `0.5px solid ${tk.border}` }}>
-          <div className="w-10 h-10 border-4 border-blue-200 border-t-[#2563EB] rounded-full animate-spin mx-auto mb-4" />
-          <p style={{ color: tk.textMuted }}>Cargando reservas...</p>
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-12 text-center shadow-sm">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Sincronizando tus itinerarios...</p>
         </div>
       ) : reservas.length === 0 ? (
-        <div style={{ background: tk.white, borderRadius: 20, padding: 48, textAlign: "center", border: `0.5px solid ${tk.border}` }}>
-          <Plane style={{ width: 56, height: 56, color: tk.textHint, margin: "0 auto 16px" }} />
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: tk.text, margin: "0 0 8px" }}>No tienes reservas aún</h3>
-          <p style={{ color: tk.textMuted, margin: "0 0 20px" }}>¡Es hora de planear tu próxima aventura!</p>
-          <Link to="/search" className="inline-block px-6 py-3 bg-[#2563EB] text-white rounded-xl text-sm font-semibold hover:shadow-xl transition-all">
-            Explorar destinos
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-12 text-center shadow-sm">
+          <Plane className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-foreground tracking-tight">Aún no registras reservas</h3>
+          <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">Tus paquetes adquiridos aparecerán reflejados en esta sección para su gestión.</p>
+          <Link to="/search" className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-95 transition-all shadow-sm">
+            Explorar Catálogo
           </Link>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+        <div className="space-y-8">
 
-          {/* ══ 1. Resumen ══ */}
+          {/* ══ Resumen de métricas ══ */}
           <section>
-            <SectionHeader title="Resumen" subtitle="Vista general de tus reservas" icon={TrendingUp} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            <SectionHeader title="Métricas del perfil" subtitle="Resumen volumétrico de solicitudes" icon={TrendingUp} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: "Total",       value: counts.todas,      color: tk.blue,   bg: tk.blueLight,   border: tk.blueBorder,   icon: TrendingUp  },
-                { label: "Confirmadas", value: counts.confirmada, color: tk.green,  bg: tk.greenLight,  border: tk.greenBorder,  icon: CheckCircle },
-                { label: "Pendientes",  value: counts.pendiente,  color: tk.orange, bg: tk.orangeLight, border: tk.orangeBorder, icon: Clock       },
-                { label: "Canceladas",  value: counts.cancelada,  color: tk.red,    bg: tk.redLight,    border: tk.redBorder,    icon: Ban         },
+                { label: "Total Procesadas", value: counts.todas, color: "text-primary border-primary/20 bg-primary/5", icon: TrendingUp },
+                { label: "Confirmadas", value: counts.confirmada, color: "text-green-600 dark:text-green-400 border-green-500/20 bg-green-500/5", icon: CheckCircle },
+                { label: "En Espera", value: counts.pendiente, color: "text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/5", icon: Clock },
+                { label: "Canceladas", value: counts.cancelada, color: "text-destructive border-destructive/20 bg-destructive/5", icon: Ban },
               ].map(s => (
-                <motion.div key={s.label} whileHover={{ y: -2 }}
-                  style={{ background: s.bg, border: `0.5px solid ${s.border}`, borderRadius: 16, padding: "16px 12px", textAlign: "center", cursor: "default" }}>
-                  <s.icon style={{ width: 18, height: 18, color: s.color, margin: "0 auto 8px" }} />
-                  <p style={{ fontSize: 30, fontWeight: 800, color: s.color, margin: 0, lineHeight: 1 }}>{s.value}</p>
-                  <p style={{ fontSize: 11, color: s.color, opacity: 0.75, margin: "5px 0 0" }}>{s.label}</p>
-                </motion.div>
+                <div key={s.label} className={`border rounded-xl p-4 text-center transition-all ${s.color}`}>
+                  <s.icon className="w-4 h-4 mx-auto mb-1 opacity-75" />
+                  <p className="text-2xl font-extrabold tracking-tight leading-none">{s.value}</p>
+                  <p className="text-[10px] font-medium opacity-80 uppercase tracking-wider mt-1.5">{s.label}</p>
+                </div>
               ))}
             </div>
           </section>
 
-          {/* ══ 2. Próximo viaje + calendario ══ */}
+          {/* ══ Calendario Próximo Viaje ══ */}
           {proxima && diasRestantes !== null && (
             <section>
-              <SectionHeader title="Próximo viaje" subtitle="Tu aventura más cercana" icon={Plane} />
+              <SectionHeader title="Cronograma más cercano" subtitle="Control de tiempo real para tu próximo servicio" icon={Plane} />
               <CalendarioViaje proxima={proxima} diasRestantes={diasRestantes} />
             </section>
           )}
 
-          {/* ══ 3. Lista con filtro ══ */}
+          {/* ══ Listado Completo ══ */}
           <section>
             <SectionHeader
-              title="Todas las reservas"
-              subtitle={`${counts.todas} reserva${counts.todas !== 1 ? "s" : ""} en total`}
+              title="Historial de Reservas"
+              subtitle={`${counts.todas} solicitud${counts.todas !== 1 ? "es" : ""} registrada${counts.todas !== 1 ? "as" : ""}`}
               icon={Calendar}
             />
 
@@ -549,144 +478,122 @@ export default function TabReservas({ reservas, loading, reservaExpandida, setRe
             />
 
             {reservasFiltradas.length === 0 ? (
-              <div style={{ background: tk.white, border: `0.5px solid ${tk.border}`, borderRadius: 16, padding: "32px 20px", textAlign: "center" }}>
-                <Search style={{ width: 36, height: 36, color: tk.textHint, margin: "0 auto 12px" }} />
-                <p style={{ fontSize: 14, fontWeight: 600, color: tk.textSub, margin: "0 0 4px" }}>Sin resultados</p>
-                <p style={{ fontSize: 12, color: tk.textMuted, margin: 0 }}>Prueba cambiando el filtro o la búsqueda</p>
+              <div className="bg-card text-card-foreground border border-border rounded-xl p-8 text-center">
+                <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-muted-foreground">No se encontraron resultados coincidentes</p>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">Prueba reajustando los criterios de búsqueda o filtros.</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
                   {reservasFiltradas.map((reserva) => {
                     const estadoMostrar = solicitadas[reserva.id_reserva] ? "cancelacion_solicitada" : reserva.estado;
-                    const config    = estadoConfig[estadoMostrar] ?? estadoConfig.pendiente;
-                    const Icon      = config.icon;
-                    const expanded  = reservaExpandida === reserva.id_reserva;
-                    const noches    = nights(reserva.fecha_inicio, reserva.fecha_fin);
-                    const yaSolicitada = !!solicitadas[reserva.id_reserva];
+                    const config = estadoConfig[estadoMostrar] ?? estadoConfig.pendiente;
+                    const Icon = config.icon;
+                    const expanded = reservaExpandida === reserva.id_reserva;
+                    const noches = nights(reserva.fecha_inicio, reserva.fecha_fin);
+                    const yaSolicitada = !!solicitadas[reserva.id_reserva] || reserva.estado === "cancelacion_solicitada" || reserva.estado === "cancelada";
 
                     return (
                       <motion.div key={reserva.id_reserva}
                         layout
-                        initial={{ opacity: 0, y: 8 }}
+                        initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        style={{ background: tk.white, borderRadius: 18, border: `0.5px solid ${tk.border}`, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                        exit={{ opacity: 0, y: -5 }}
+                        className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden transition-colors duration-200">
 
-                        <div style={{ padding: "18px 20px" }}>
-                          {/* Header tarjeta */}
-                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                              <div style={{ width: 42, height: 42, background: tk.blueLight, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", border: `0.5px solid ${tk.blueBorder}`, flexShrink: 0 }}>
-                                <Plane style={{ width: 19, height: 19, color: tk.blue }} />
+                        <div className="p-4 sm:p-5">
+                          {/* Header de la Tarjeta */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                                <Plane className="w-4 h-4 text-primary" />
                               </div>
                               <div>
-                                <h3 style={{ fontSize: 15, fontWeight: 700, color: tk.text, margin: "0 0 2px" }}>
-                                  Reserva #{reserva.id_reserva}
-                                </h3>
-                                <p style={{ fontSize: 11, color: tk.textMuted, margin: 0 }}>
-                                  Paquete #{reserva.id_paquete} · {fmt(reserva.fecha_reserva)}
+                                <h3 className="text-sm font-bold text-foreground">Reserva #ID-{reserva.id_reserva}</h3>
+                                <p className="text-[11px] text-muted-foreground">
+                                  Paquete #{reserva.id_paquete} · Registro: {fmt(reserva.fecha_reserva)}
                                 </p>
                               </div>
                             </div>
-                            <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${config.bg} ${config.color}`}>
+                            <span className={`inline-flex items-center gap-1.5 self-start sm:self-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${config.bg} ${config.color}`}>
                               <Icon className="w-3.5 h-3.5" />
                               {config.label}
                             </span>
                           </div>
 
-                          {/* Chips */}
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 14 }}>
-                            {[
-                              { icon: Calendar, text: `${fmt(reserva.fecha_inicio, { day: "numeric", month: "short" })} → ${fmt(reserva.fecha_fin, { day: "numeric", month: "short" })}` },
-                              { icon: Moon,     text: `${noches} noche${noches !== 1 ? "s" : ""}` },
-                              { icon: Users,    text: `${reserva.numero_personas} persona${reserva.numero_personas !== 1 ? "s" : ""}` },
-                            ].map(({ icon: Ic, text }) => (
-                              <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, background: tk.surface, border: `0.5px solid ${tk.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 12, color: tk.textSub }}>
-                                <Ic style={{ width: 12, height: 12, color: tk.blue }} />{text}
-                              </div>
-                            ))}
+                          {/* Chips informativos */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                            <div className="bg-muted/40 border border-border/40 rounded-lg p-2.5">
+                              <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">Fecha Ida</span>
+                              <span className="text-xs font-semibold text-foreground">{fmt(reserva.fecha_inicio)}</span>
+                            </div>
+                            <div className="bg-muted/40 border border-border/40 rounded-lg p-2.5">
+                              <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">Fecha Regreso</span>
+                              <span className="text-xs font-semibold text-foreground">{fmt(reserva.fecha_fin)}</span>
+                            </div>
+                            <div className="bg-muted/40 border border-border/40 rounded-lg p-2.5">
+                              <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">Estancia</span>
+                              <span className="text-xs font-semibold text-foreground">{noches} {noches === 1 ? "Noche" : "Noches"}</span>
+                            </div>
+                            <div className="bg-muted/40 border border-border/40 rounded-lg p-2.5">
+                              <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">Importe Total</span>
+                              <span className="text-xs font-bold text-primary">
+                                ${Number(reserva.precio_total ?? 0).toLocaleString("es-CO")} COP
+                              </span>
+                            </div>
                           </div>
 
-                          {/* Toggle */}
-                          <button
-                            onClick={() => setReservaExpandida(expanded ? null : reserva.id_reserva)}
-                            style={{ width: "100%", padding: "8px 0", fontSize: 12, color: tk.blue, fontWeight: 500, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, borderRadius: 10 }}
-                            onMouseEnter={e => (e.currentTarget.style.background = tk.blueLight)}
-                            onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-                            {expanded ? "Ocultar detalles" : "Ver detalles completos"}
-                            <ChevronRight style={{ width: 14, height: 14, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
-                          </button>
+                          {/* Acciones principales */}
+                          <div className="flex flex-wrap items-center justify-between border-t border-border/60 pt-4 gap-2">
+                            <div className="flex items-center gap-2">
+                              {/* CORRECCIÓN: Permitir descarga si está confirmada O pendiente, y ajustar props */}
+                              {clienteData && (reserva.estado === "confirmada" || reserva.estado === "pendiente") && (
+                                <ComprobantePDF
+                                  reservaId={reserva.id_reserva}
+                                  clienteData={clienteData}
+                                />
+                              )}
+
+                              {!yaSolicitada && reserva.estado !== "finalizada" && (
+                                <button
+                                  onClick={() => setModalReserva(reserva)}
+                                  className="px-3 py-1.5 border border-destructive/30 text-destructive text-xs font-medium rounded-lg hover:bg-destructive/5 transition-all cursor-pointer"
+                                >
+                                  Solicitar Cancelación
+                                </button>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={() => setReservaExpandida(expanded ? null : reserva.id_reserva)}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5 cursor-pointer"
+                            >
+                              <span>{expanded ? "Ocultar especificaciones" : "Ver especificaciones"}</span>
+                              <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`} />
+                            </button>
+                          </div>
                         </div>
 
-                        {/* Panel expandido */}
-                        <AnimatePresence>
+                        {/* Desglose expandible */}
+                        <AnimatePresence initial={false}>
                           {expanded && (
                             <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              style={{ overflow: "hidden", borderTop: `0.5px solid ${tk.borderLight}` }}>
-                              <div style={{ background: tk.surface, padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-
-                                {/* Detalles */}
-                                <div>
-                                  <h4 style={{ fontSize: 13, fontWeight: 600, color: tk.text, margin: "0 0 10px", display: "flex", alignItems: "center", gap: 6 }}>
-                                    <Calendar style={{ width: 14, height: 14, color: tk.blue }} /> Detalles del viaje
-                                  </h4>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                                    {[
-                                      ["Fecha de reserva", fmt(reserva.fecha_reserva)],
-                                      ["Check-in",  fmt(reserva.fecha_inicio, { weekday: "long", day: "numeric", month: "long" })],
-                                      ["Check-out", fmt(reserva.fecha_fin,    { weekday: "long", day: "numeric", month: "long" })],
-                                      ["Duración",  `${noches} noches`],
-                                      ["Viajeros",  `${reserva.numero_personas} persona(s)`],
-                                      ["Estado",    config.label],
-                                    ].map(([k, v]) => (
-                                      <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: tk.white, borderRadius: 9, padding: "7px 11px", border: `0.5px solid ${tk.border}` }}>
-                                        <span style={{ fontSize: 12, color: tk.textMuted }}>{k}</span>
-                                        <span style={{ fontSize: 12, fontWeight: 600, color: tk.text }}>{v}</span>
-                                      </div>
-                                    ))}
+                              initial={{ height: 0 }}
+                              animate={{ height: "auto" }}
+                              exit={{ height: 0 }}
+                              className="overflow-hidden border-t border-border bg-muted/20"
+                            >
+                              <div className="p-4 sm:p-5 space-y-4 text-xs">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <h4 className="font-bold text-foreground text-xs uppercase tracking-wider text-muted-foreground/90">Alojamiento & Logística</h4>
+                                    <p className="text-muted-foreground">Detalles del itinerario hotelero, locaciones de check-in y asignaciones de cupos incluidos dentro de la tarifa.</p>
                                   </div>
-                                </div>
-
-                                {/* Acciones */}
-                                <div>
-                                  <h4 style={{ fontSize: 13, fontWeight: 600, color: tk.text, margin: "0 0 10px", display: "flex", alignItems: "center", gap: 6 }}>
-                                    <CreditCard style={{ width: 14, height: 14, color: tk.blue }} /> Acciones
-                                  </h4>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                    {reserva.estado === "pendiente" && (
-                                      <button style={{ width: "100%", padding: "10px 0", background: tk.orange, color: "#fff", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-                                        <Wallet style={{ width: 15, height: 15 }} /> Completar pago
-                                      </button>
-                                    )}
-                                    {reserva.estado !== "cancelada" && reserva.estado !== "finalizada" && (
-                                      yaSolicitada ? (
-                                        <div style={{ padding: "10px 14px", background: tk.purpleLight, border: `0.5px solid ${tk.purpleBorder}`, borderRadius: 12, fontSize: 12, fontWeight: 600, color: tk.purple, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-                                          <Clock style={{ width: 14, height: 14 }} /> Solicitud enviada — en revisión
-                                        </div>
-                                      ) : (
-                                        <button onClick={() => setModalReserva(reserva)}
-                                          style={{ width: "100%", padding: "10px 0", background: tk.redLight, border: `0.5px solid ${tk.redBorder}`, borderRadius: 12, fontSize: 13, fontWeight: 600, color: tk.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-                                          <XCircle style={{ width: 15, height: 15 }} /> Solicitar cancelación
-                                        </button>
-                                      )
-                                    )}
-                                    <ComprobantePDF reservaId={reserva.id_reserva} clienteData={clienteData} />
+                                  <div className="space-y-2">
+                                    <h4 className="font-bold text-foreground text-xs uppercase tracking-wider text-muted-foreground/90">Políticas de Modificación</h4>
+                                    <p className="text-muted-foreground">Toda alteración en las fechas de estancia o variaciones en el número de pasajeros declarados debe tramitarse con 5 días hábiles de anticipación.</p>
                                   </div>
-                                  {yaSolicitada && (
-                                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                                      style={{ marginTop: 10, background: tk.purpleLight, border: `0.5px solid ${tk.purpleBorder}`, borderRadius: 12, padding: "12px 14px" }}>
-                                      <p style={{ fontSize: 12, fontWeight: 600, color: tk.purple, margin: "0 0 3px", display: "flex", alignItems: "center", gap: 6 }}>
-                                        <SendHorizonal style={{ width: 13, height: 13 }} /> Solicitud de cancelación enviada
-                                      </p>
-                                      <p style={{ fontSize: 11, color: tk.purple, margin: 0, opacity: 0.8 }}>
-                                        Motivo: <strong>{solicitadas[reserva.id_reserva]}</strong>
-                                      </p>
-                                    </motion.div>
-                                  )}
                                 </div>
                               </div>
                             </motion.div>

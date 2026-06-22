@@ -41,23 +41,23 @@ interface FieldProps {
 
 function Field({ icon, error, suffix, children }: FieldProps) {
     return (
-        <div className="space-y-1">
+        <div className="space-y-1.5 w-full">
             <div className="relative group">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-200">
                     {icon}
                 </span>
                 {children}
                 {suffix && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</span>
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center">{suffix}</span>
                 )}
             </div>
             <AnimatePresence>
                 {error && (
                     <motion.p
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        className="text-xs text-red-500 flex items-center gap-1 pl-1"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-[11px] text-destructive font-medium flex items-center gap-1 pl-1"
                     >
                         <AlertCircle className="w-3 h-3 flex-shrink-0" />
                         {error}
@@ -193,9 +193,9 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     };
 
     const inputBase = (name: string) =>
-        `w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border outline-none transition-all bg-gray-50 focus:bg-white ${fieldError(name)
-            ? "border-red-300 focus:ring-2 focus:ring-red-200"
-            : "border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+        `w-full pl-11 pr-4 py-3 text-sm rounded-lg border outline-none transition-all duration-200 bg-input-background text-foreground font-medium placeholder:text-muted-foreground/60 focus:bg-card ${fieldError(name)
+            ? "border-destructive focus:border-destructive focus:ring-4 focus:ring-destructive/10"
+            : "border-border focus:border-primary focus:ring-4 focus:ring-primary/10"
         }`;
 
     return (
@@ -209,89 +209,81 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 flex items-center justify-center z-[100] p-4 overflow-y-auto"
-                        style={{ backgroundColor: "rgba(15,23,42,0.75)", backdropFilter: "blur(6px)" }}
+                        className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/40 backdrop-blur-md overflow-y-auto"
                         onClick={handleClose}
                     >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.96, y: 15 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            transition={{ type: "spring", damping: 26, stiffness: 340 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 15 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 360 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-lg my-8 rounded-2xl shadow-2xl overflow-hidden bg-white"
+                            className="relative w-full max-w-lg my-8 rounded-xl shadow-2xl border border-border overflow-hidden bg-card text-card-foreground max-h-[90vh] flex flex-col"
                         >
-                            {/* ── Header naranja ── */}
-                            <div
-                                className="relative px-7 pt-7 pb-8 overflow-hidden"
-                                style={{ background: "linear-gradient(135deg, #F97316 0%, #FB923C 60%, #FBBF24 100%)" }}
-                            >
-                                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full"
-                                    style={{ background: "rgba(255,255,255,0.15)" }} />
-                                <div className="absolute top-10 -right-2 w-16 h-16 rounded-full"
-                                    style={{ background: "rgba(255,255,255,0.08)" }} />
+                            {/* ── Header con tu paleta Granate / Accent ── */}
+                            <div className="relative px-8 py-6 flex-shrink-0 overflow-hidden bg-primary text-primary-foreground">
+                                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5 blur-xl" />
+                                <div className="absolute top-4 -right-4 w-20 h-20 rounded-full bg-white/5 blur-lg" />
 
                                 <button
                                     onClick={handleClose}
-                                    className="absolute top-4 right-4 p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-all"
+                                    className="absolute top-5 right-5 p-2 rounded-lg text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10 transition-all duration-200"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
 
-                                <div className="flex items-center gap-3 relative">
-                                    <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                                        <Plane className="w-5 h-5 text-white" />
+                                <div className="flex items-center gap-4 relative">
+                                    <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center shadow-inner border border-white/10">
+                                        <Plane className="w-6 h-6 text-primary-foreground transform -rotate-12" />
                                     </div>
                                     <div>
-                                        <p className="text-white/70 text-[10px] font-semibold tracking-widest uppercase">AleckTours</p>
-                                        <h1 className="text-white font-bold text-xl leading-tight">Crea tu cuenta</h1>
+                                        <p className="text-primary-foreground/70 text-[11px] font-bold tracking-widest uppercase">AleckTours</p>
+                                        <h1 className="text-primary-foreground font-medium text-2xl tracking-tight leading-none mt-0.5">Crea tu cuenta</h1>
                                     </div>
                                 </div>
 
-                                <p className="text-white/75 text-sm mt-2.5 relative">
-                                    Únete y empieza a explorar el mundo ✈️
+                                <p className="text-primary-foreground/80 text-xs font-normal mt-3 relative max-w-[85%]">
+                                    Únete y empieza a explorar el mundo con la mejor experiencia de viaje ✈️
                                 </p>
 
-                                {/* Steps */}
-                                <div className="flex items-center gap-2 mt-4 relative">
+                                {/* Pasos de progreso con estilos limpios */}
+                                <div className="flex items-center gap-4 mt-5 relative bg-black/10 backdrop-blur-sm rounded-lg px-4 py-2 w-fit">
                                     {["Acceso", "Perfil", "Listo"].map((step, i) => (
                                         <div key={step} className="flex items-center gap-2">
-                                            <div className={`h-1 rounded-full transition-all ${i === 0 ? "w-8 bg-white" : "w-5 bg-white/30"}`} />
-                                            <span className="text-white/50 text-[10px] font-medium">{step}</span>
+                                            <div className={`h-1.5 rounded-full transition-all duration-300 ${i === 0 ? "w-6 bg-primary-foreground" : "w-2 bg-primary-foreground/30"}`} />
+                                            <span className={`text-[10px] font-bold tracking-wider uppercase ${i === 0 ? "text-primary-foreground" : "text-primary-foreground/40"}`}>{step}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* ── Body ── */}
-                            <div className="px-7 py-6">
+                            {/* ── Cuerpo del Formulario ── */}
+                            <div className="px-8 py-6 overflow-y-auto flex-1 bg-card">
                                 {success ? (
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="text-center py-6"
+                                        className="text-center py-8 px-4"
                                     >
-                                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                                            style={{ background: "linear-gradient(135deg, #F97316, #FBBF24)" }}>
-                                            <CheckCircle className="w-8 h-8 text-white" />
+                                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 bg-accent text-accent-foreground shadow-xl ring-4 ring-primary/5">
+                                            <CheckCircle className="w-10 h-10" />
                                         </div>
-                                        <h2 className="text-xl font-bold text-gray-900 mb-1">¡Todo listo!</h2>
-                                        <p className="text-gray-500 text-sm mb-6">
-                                            Cuenta creada como{" "}
-                                            <span className="font-semibold text-gray-700">{email}</span>
+                                        <h2 className="text-2xl font-medium text-foreground mb-2 tracking-tight">¡Todo listo!</h2>
+                                        <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+                                            Cuenta creada exitosamente bajo el correo: <br />
+                                            <span className="font-bold text-foreground underline decoration-primary decoration-2">{email}</span>
                                         </p>
                                         <button
                                             onClick={handleVerify}
                                             disabled={verifying}
-                                            className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:shadow-lg disabled:opacity-50"
-                                            style={{ background: "linear-gradient(135deg, #F97316, #FBBF24)" }}
+                                            className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm tracking-wide transition-all shadow-md hover:opacity-95 active:scale-[0.99] disabled:opacity-50"
                                         >
                                             {verifying ? "Verificando..." : "✓ Verificar mi cuenta"}
                                         </button>
-                                        <p className="text-xs text-gray-400 mt-2 mb-4">En producción esto llegaría por email</p>
+                                        <p className="text-[11px] font-medium text-muted-foreground mt-3 mb-6 bg-muted py-1.5 rounded-lg border border-border">En producción esto llegará de manera directa por email</p>
                                         <button
                                             onClick={() => { handleClose(); onSwitchToLogin?.(); }}
-                                            className="text-sm text-gray-400 hover:text-orange-500 transition-colors"
+                                            className="text-sm font-medium text-primary hover:underline transition-colors"
                                         >
                                             Ir a iniciar sesión →
                                         </button>
@@ -301,27 +293,27 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                         <AnimatePresence>
                                             {formError && (
                                                 <motion.div
-                                                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                                                    animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
-                                                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                                                    className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 rounded-xl p-3 text-xs"
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -10 }}
+                                                    className="flex items-start gap-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 text-xs font-medium mb-6 shadow-sm"
                                                 >
-                                                    <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                                                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                                     <span>{formError}</span>
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
 
-                                        <form onSubmit={handleSubmit} className="space-y-5">
+                                        <form onSubmit={handleSubmit} className="space-y-6">
 
-                                            {/* Sección 1 */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                                                        style={{ background: "linear-gradient(135deg, #F97316, #FBBF24)" }}>1</div>
-                                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Datos de acceso</span>
-                                                    <div className="flex-1 h-px bg-gray-100" />
+                                            {/* Sección 1: Datos de Acceso */}
+                                            <div className="bg-muted/40 border border-border p-5 rounded-lg space-y-4 shadow-sm">
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shadow-sm">1</div>
+                                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Datos de acceso</span>
+                                                    <div className="flex-1 h-px bg-border" />
                                                 </div>
+
                                                 <div className="space-y-3">
                                                     <Field icon={<User className="w-4 h-4" />} error={fieldError("username")}>
                                                         <input type="text" name="username" value={formData.username}
@@ -330,18 +322,20 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                             required minLength={3} maxLength={50}
                                                             className={inputBase("username")} />
                                                     </Field>
+
                                                     <Field icon={<Mail className="w-4 h-4" />} error={fieldError("correo_electronico")}>
                                                         <input type="email" name="correo_electronico" value={formData.correo_electronico}
                                                             onChange={handleChange} onBlur={handleBlur}
                                                             placeholder="Correo electrónico" required
                                                             className={inputBase("correo_electronico")} />
                                                     </Field>
-                                                    <div className="grid grid-cols-2 gap-3">
+
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <Field icon={<Lock className="w-4 h-4" />} error={fieldError("password")}
                                                             suffix={
                                                                 <button type="button" tabIndex={-1}
                                                                     onClick={() => setShowPassword(s => !s)}
-                                                                    className="text-gray-400 hover:text-orange-500 transition-colors">
+                                                                    className="text-muted-foreground hover:text-primary transition-colors p-1">
                                                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                                 </button>
                                                             }>
@@ -349,13 +343,13 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                                 name="password" value={formData.password}
                                                                 onChange={handleChange} onBlur={handleBlur}
                                                                 placeholder="Contraseña" required
-                                                                className={inputBase("password") + " pr-9"} />
+                                                                className={inputBase("password") + " pr-10"} />
                                                         </Field>
                                                         <Field icon={<Lock className="w-4 h-4" />} error={fieldError("confirmPassword")}
                                                             suffix={
                                                                 <button type="button" tabIndex={-1}
                                                                     onClick={() => setShowConfirmPassword(s => !s)}
-                                                                    className="text-gray-400 hover:text-orange-500 transition-colors">
+                                                                    className="text-muted-foreground hover:text-primary transition-colors p-1">
                                                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                                 </button>
                                                             }>
@@ -363,20 +357,20 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                                 name="confirmPassword" value={formData.confirmPassword}
                                                                 onChange={handleChange} onBlur={handleBlur}
                                                                 placeholder="Confirmar" required
-                                                                className={inputBase("confirmPassword") + " pr-9"} />
+                                                                className={inputBase("confirmPassword") + " pr-10"} />
                                                         </Field>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Sección 2 */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                                                        style={{ background: "linear-gradient(135deg, #F97316, #FBBF24)" }}>2</div>
-                                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Datos personales</span>
-                                                    <div className="flex-1 h-px bg-gray-100" />
+                                            {/* Sección 2: Datos Personales */}
+                                            <div className="bg-muted/40 border border-border p-5 rounded-lg space-y-4 shadow-sm">
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shadow-sm">2</div>
+                                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Datos personales</span>
+                                                    <div className="flex-1 h-px bg-border" />
                                                 </div>
+
                                                 <div className="space-y-3">
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <Field icon={<User className="w-4 h-4" />}>
@@ -390,6 +384,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                                 placeholder="Apellido" required className={inputBase("apellido")} />
                                                         </Field>
                                                     </div>
+
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <Field icon={<CreditCard className="w-4 h-4" />} error={fieldError("cedula")}>
                                                             <input type="text" name="cedula" value={formData.cedula}
@@ -404,18 +399,36 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                                 className={inputBase("celular")} />
                                                         </Field>
                                                     </div>
+
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <Field icon={<MapPin className="w-4 h-4" />}>
-                                                            <input type="text" name="ciudad" value={formData.ciudad}
-                                                                onChange={handleChange} placeholder="Ciudad"
-                                                                className={inputBase("ciudad")} />
+                                                            <select
+                                                                name="ciudad"
+                                                                value={formData.ciudad}
+                                                                onChange={handleChange}
+                                                                className={inputBase("ciudad")}
+                                                            >
+                                                                <option value="" disabled>  ciudad</option>
+                                                                <option value="Bogotá">Bogotá</option>
+                                                                <option value="Medellín">Medellín</option>
+                                                                <option value="Cali">Cali</option>
+                                                                <option value="Barranquilla">Barranquilla</option>
+                                                                <option value="Cartagena">Cartagena</option>
+                                                                <option value="Bucaramanga">Bucaramanga</option>
+                                                                <option value="Pereira">Pereira</option>
+                                                                <option value="Manizales">Manizales</option>
+                                                                <option value="Santa Marta">Santa Marta</option>
+                                                                <option value="Cúcuta">Cúcuta</option>
+                                                                {/* Agrega más ciudades según sea necesario */}
+                                                            </select>
                                                         </Field>
                                                         <Field icon={<Calendar className="w-4 h-4" />} error={fieldError("fecha_nacimiento")}>
                                                             <input type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento}
                                                                 onChange={handleChange} onBlur={handleBlur}
-                                                                required className={inputBase("fecha_nacimiento")} />
+                                                                required className={inputBase("fecha_nacimiento") + " text-foreground"} />
                                                         </Field>
                                                     </div>
+
                                                     <Field icon={<MapPin className="w-4 h-4" />}>
                                                         <input type="text" name="direccion" value={formData.direccion}
                                                             onChange={handleChange} placeholder="Dirección (opcional)"
@@ -424,57 +437,59 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                 </div>
                                             </div>
 
-                                            {/* Términos */}
-                                            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                                            {/* Checkbox de Términos */}
+                                            <label className="flex items-start gap-3 cursor-pointer select-none px-1 py-1 group">
                                                 <div className="relative mt-0.5 flex-shrink-0">
                                                     <input type="checkbox" checked={acceptedTerms}
                                                         onChange={(e) => setAcceptedTerms(e.target.checked)}
                                                         className="sr-only peer" />
-                                                    <div className="w-4 h-4 rounded border-2 border-gray-300 peer-checked:border-orange-500 peer-checked:bg-orange-500 transition-all flex items-center justify-center">
+                                                    <div className="w-4 h-4 rounded border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center group-hover:border-primary/80">
                                                         {acceptedTerms && (
-                                                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                            <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                             </svg>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <span className="text-xs text-gray-500 leading-relaxed">
+                                                <span className="text-[11px] text-muted-foreground font-medium leading-normal">
                                                     He leído y acepto los{" "}
                                                     <button type="button"
                                                         onClick={(e) => { e.preventDefault(); setShowTerminos(true); }}
-                                                        className="text-orange-500 hover:text-orange-600 font-semibold hover:underline transition-colors">
+                                                        className="text-primary hover:underline font-bold transition-colors">
                                                         Términos y Condiciones
                                                     </button>{" "}
                                                     y la{" "}
                                                     <button type="button"
                                                         onClick={(e) => { e.preventDefault(); setShowPrivacidad(true); }}
-                                                        className="text-orange-500 hover:text-orange-600 font-semibold hover:underline transition-colors">
+                                                        className="text-primary hover:underline font-bold transition-colors">
                                                         Política de Privacidad
                                                     </button>{" "}
                                                     de AleckTours
                                                 </span>
                                             </label>
 
-                                            {/* Botón submit */}
-                                            <button type="submit" disabled={!isFormValid || loading}
-                                                className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
-                                                style={{ background: "linear-gradient(135deg, #F97316 0%, #FBBF24 100%)" }}>
-                                                {loading ? (
-                                                    <span className="flex items-center justify-center gap-2">
-                                                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                                        </svg>
-                                                        Creando cuenta...
-                                                    </span>
-                                                ) : "Crear cuenta →"}
-                                            </button>
+                                            {/* Botón de Envió Principal */}
+                                            <div className="pt-2">
+                                                <button type="submit" disabled={!isFormValid || loading}
+                                                    className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm tracking-wide transition-all duration-200 shadow-md hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    {loading ? (
+                                                        <span className="flex items-center justify-center gap-2">
+                                                            <svg className="animate-spin w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                            </svg>
+                                                            Creando cuenta...
+                                                        </span>
+                                                    ) : "Crear cuenta →"}
+                                                </button>
+                                            </div>
 
-                                            <p className="text-center text-xs text-gray-400">
+                                            <p className="text-center text-xs font-medium text-muted-foreground">
                                                 ¿Ya tienes cuenta?{" "}
                                                 <button type="button"
                                                     onClick={() => { handleClose(); onSwitchToLogin?.(); }}
-                                                    className="text-orange-500 hover:text-orange-600 font-semibold transition-colors">
+                                                    className="text-primary font-bold hover:underline transition-colors">
                                                     Inicia sesión
                                                 </button>
                                             </p>

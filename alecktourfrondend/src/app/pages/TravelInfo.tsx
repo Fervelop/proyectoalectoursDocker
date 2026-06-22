@@ -1,7 +1,7 @@
-import Navbar from "../components/Navbar";
-import { Plane, Luggage, FileText, CreditCard, Shield, AlertCircle, MapPin, Clock } from "lucide-react";
+import { AlertCircle, Clock, CreditCard, FileText, Luggage, MapPin, Plane, Shield } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import Navbar from "../components/Navbar";
 
 export default function TravelInfo() {
   const [activeTab, setActiveTab] = useState("documentos");
@@ -144,13 +144,13 @@ export default function TravelInfo() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-blue-600 to-cyan-600">
+      {/* Hero Section - Modificado a Granate de AlecTours */}
+      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-[#7B1E3A] to-[#A13B55]">
         <div className="absolute inset-0">
           <motion.div
             animate={{
               scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
+              opacity: [0.1, 0.2, 0.1],
             }}
             transition={{
               duration: 8,
@@ -178,7 +178,7 @@ export default function TravelInfo() {
       {/* Content Section */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Tabs */}
+          {/* Tabs - Modificadas a la paleta AlecTours */}
           <div className="mb-12">
             <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide">
               {tabs.map((tab, index) => (
@@ -190,11 +190,10 @@ export default function TravelInfo() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-semibold whitespace-nowrap transition-all ${
-                    activeTab === tab.id
-                      ? "bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white shadow-lg"
-                      : "bg-white text-gray-700 hover:shadow-md border border-gray-200"
-                  }`}
+                  className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-semibold whitespace-nowrap transition-all cursor-pointer ${activeTab === tab.id
+                    ? "bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white shadow-lg"
+                    : "bg-white text-gray-700 hover:shadow-md border border-gray-200"
+                    }`}
                 >
                   <tab.icon className="w-5 h-5" />
                   {tab.label}
@@ -224,7 +223,8 @@ export default function TravelInfo() {
                   whileHover={{ y: -10 }}
                   className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all border border-gray-100"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                  {/* Fondo de los iconos modificado al Granate de la marca */}
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#7B1E3A] to-[#A13B55] rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                     <item.icon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-gray-900">
@@ -240,17 +240,17 @@ export default function TravelInfo() {
         </div>
       </section>
 
-      {/* Important Notice */}
-      <section className="py-20 bg-gradient-to-r from-amber-50 to-orange-50">
+      {/* Important Notice - Modificado al Oro/Miel suave de la marca */}
+      <section className="py-20 bg-gradient-to-r from-[#C9A227]/5 to-[#C9A227]/10">
         <div className="max-w-4xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="bg-white rounded-3xl p-8 shadow-xl border-2 border-orange-200"
+            className="bg-white rounded-3xl p-8 shadow-xl border-2 border-[#C9A227]/30"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#C9A227] to-[#B38F1B] rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertCircle className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -258,13 +258,13 @@ export default function TravelInfo() {
                   Importante
                 </h3>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  La información proporcionada es de carácter general. Te recomendamos verificar los 
-                  requisitos específicos de tu destino en las páginas oficiales de migración y consulados. 
+                  La información proporcionada es de carácter general. Te recomendamos verificar los
+                  requisitos específicos de tu destino en las páginas oficiales de migración y consulados.
                   Los requisitos pueden cambiar sin previo aviso.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
                   Para más información, contáctanos al <strong>+57 (1) 800-ALECK</strong> o escríbenos a{" "}
-                  <strong className="text-[#FF6B35]">info@alecktours.com</strong>
+                  <strong className="text-[#7B1E3A]">info@alecktours.com</strong>
                 </p>
               </div>
             </div>
@@ -272,7 +272,7 @@ export default function TravelInfo() {
         </div>
       </section>
 
-      {/* FAQ Preview */}
+      {/* FAQ Preview - Botón modificado a la paleta AlecTours */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div
@@ -290,7 +290,7 @@ export default function TravelInfo() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               href="/faq"
-              className="inline-block px-10 py-4 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full font-bold text-lg hover:shadow-2xl transition-all"
+              className="inline-block px-10 py-4 bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white rounded-full font-bold text-lg hover:shadow-2xl transition-all"
             >
               Ver preguntas frecuentes
             </motion.a>

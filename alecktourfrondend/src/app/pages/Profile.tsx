@@ -1,16 +1,16 @@
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { useAuth } from "../context/AuthContext";
-import { motion, AnimatePresence } from "motion/react";
-import { clienteService, ClienteResponse } from "../services/cliente.service";
-import { reservaService, ReservaResponse } from "../services/reserva.service";
-import { preferenciasService, PreferenciaResponse } from "../services/preferencias.service";
 import ProfileSidebar from "../components/profile/ProfileSidebar";
-import TabReservas from "../components/profile/TabReservas";
-import TabPreferencias from "../components/profile/TabPreferencias";
 import TabCuenta from "../components/profile/TabCuenta";
-
+import TabPreferencias from "../components/profile/TabPreferencias";
+import TabReservas from "../components/profile/TabReservas";
+import { useAuth } from "../context/AuthContext";
+import { ClienteResponse, clienteService } from "../services/cliente.service";
+import { PreferenciaResponse, preferenciasService } from "../services/preferencias.service";
+import { ReservaResponse, reservaService } from "../services/reserva.service";
 export default function Profile() {
   const { usuario, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -43,13 +43,22 @@ export default function Profile() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       <Navbar />
-      <div className="bg-gradient-to-r from-[#2563EB] via-[#06B6D4] to-[#F59E0B] h-40 relative">
-        <div className="absolute inset-0 bg-black/10" />
+
+      {/* ── Banner Superior con la identidad Granate Agencia ── */}
+      <div className="bg-primary h-40 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/5 dark:bg-black/20" />
+        {/* Efectos sutiles de fondo para aportar dinamismo visual */}
+        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+        <div className="absolute top-8 left-1/4 w-32 h-32 rounded-full bg-white/5 blur-xl pointer-events-none" />
       </div>
-      <div className="max-w-7xl mx-auto px-4 -mt-16 pb-16">
+
+      {/* ── Contenedor Principal ── */}
+      <div className="max-w-7xl mx-auto px-4 -mt-16 pb-16 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+          {/* Barra Lateral de Usuario */}
           <aside className="lg:col-span-1">
             <ProfileSidebar
               usuario={usuario}
@@ -60,27 +69,55 @@ export default function Profile() {
               onLogout={handleLogout}
             />
           </aside>
-          <main className="lg:col-span-3 mt-8">
+
+          {/* Área de Contenido Dinámico */}
+          <main className="lg:col-span-3 mt-4 lg:mt-8">
             <AnimatePresence mode="wait">
               {activeTab === "reservas" && (
-                <motion.div key="reservas" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  <TabReservas reservas={reservas} loading={loading} reservaExpandida={reservaExpandida} setReservaExpandida={setReservaExpandida}   clienteData={clienteData}  />
+                <motion.div
+                  key="reservas"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <TabReservas
+                    reservas={reservas}
+                    loading={loading}
+                    reservaExpandida={reservaExpandida}
+                    setReservaExpandida={setReservaExpandida}
+                    clienteData={clienteData}
+                  />
                 </motion.div>
               )}
               {activeTab === "preferencias" && (
-                <motion.div key="preferencias" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <motion.div
+                  key="preferencias"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <TabPreferencias preferencias={preferencias} />
                 </motion.div>
               )}
               {activeTab === "cuenta" && (
-                <motion.div key="cuenta" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <motion.div
+                  key="cuenta"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <TabCuenta clienteData={clienteData} />
                 </motion.div>
               )}
             </AnimatePresence>
           </main>
+
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -1,13 +1,28 @@
+import {
+  Clock, Coffee, Compass, CreditCard, Heart, MapPin,
+  Mountain, Music, Palmtree,
+  PenSquare,
+  Plane, User, Utensils
+} from "lucide-react";
 import { Link } from "react-router";
-import { Heart, Compass, User, CreditCard, MapPin, Clock, Plane, Palmtree, Mountain, Music, Utensils, Coffee } from "lucide-react";
 
+// ── Mapeos de Negocio ──────────────────────────────────────────────────────
 const interesIcons: Record<string, any> = {
-  beach: Palmtree, nature: Mountain, culture: Music,
-  food: Utensils, adventure: Compass, wellness: Coffee,
+  beach: Palmtree,
+  nature: Mountain,
+  culture: Music,
+  food: Utensils,
+  adventure: Compass,
+  wellness: Coffee,
 };
+
 const interesLabels: Record<string, string> = {
-  beach: "Playa y Relax", nature: "Naturaleza", culture: "Cultura",
-  food: "Gastronomía", adventure: "Aventura", wellness: "Bienestar",
+  beach: "Playa y Relax",
+  nature: "Naturaleza",
+  culture: "Cultura",
+  food: "Gastronomía",
+  adventure: "Aventura",
+  wellness: "Bienestar",
 };
 
 interface Props { preferencias: any; }
@@ -15,64 +30,101 @@ interface Props { preferencias: any; }
 export default function TabPreferencias({ preferencias }: Props) {
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
+      {/* ── Header de Sección ── */}
+      <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mis Preferencias</h1>
-          <p className="text-gray-500 mt-1">Así personalizamos tu experiencia de viaje</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight text-white">Mis Preferencias</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Así personalizamos tu experiencia y recomendaciones de viaje</p>
         </div>
-        <Link to="/preferences"
-          className="px-4 py-2 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all">
-          {preferencias ? "Editar" : "Completar"}
+        <Link
+          to="/preferences"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-95 transition-all shadow-sm shrink-0"
+        >
+          <PenSquare className="w-4 h-4" />
+          <span>{preferencias ? "Editar perfil" : "Completar"}</span>
         </Link>
       </div>
 
+      {/* ── Estado Vacío (Sin Preferencias) ── */}
       {!preferencias ? (
-        <div className="bg-white rounded-2xl shadow p-12 text-center">
-          <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Sin preferencias guardadas</h3>
-          <p className="text-gray-500 mb-6">Cuéntanos qué te gusta para recomendarte los mejores destinos.</p>
-          <Link to="/preferences" className="inline-block px-6 py-3 bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white rounded-xl hover:shadow-xl transition-all">
-            Completar preferencias
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-12 text-center shadow-sm max-w-2xl mx-auto transition-colors duration-200">
+          <div className="w-16 h-16 bg-primary/5 border border-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-8 h-8 text-primary" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground tracking-tight">Sin preferencias guardadas</h3>
+          <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+            Cuéntanos qué te apasiona para calibrar el motor de sugerencias inteligentes con tus destinos ideales.
+          </p>
+          <Link
+            to="/preferences"
+            className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-95 transition-all shadow-sm"
+          >
+            Configurar preferencias
           </Link>
         </div>
       ) : (
+        // ── Vista de Datos Estructurada ──
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow p-6">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Heart className="w-5 h-5 text-[#FF6B35]" /> Tus intereses
+
+          {/* Bloque: Intereses Primarios */}
+          <div className="bg-card text-card-foreground border border-border rounded-xl p-5 md:p-6 shadow-sm transition-colors duration-200">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted-foreground/90 mb-4 flex items-center gap-2">
+              <Heart className="w-4 h-4 text-primary" /> Tus intereses principales
             </h3>
-            <div className="flex flex-wrap gap-3">
-              {(preferencias.intereses || []).map((interes: string) => {
-                const Icon = interesIcons[interes] || Compass;
+
+            {preferencias.intereses && preferencias.intereses.length > 0 ? (
+              <div className="flex flex-wrap gap-2.5">
+                {(preferencias.intereses).map((interes: string) => {
+                  const Icon = interesIcons[interes] || Compass;
+                  return (
+                    <div
+                      key={interes}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-semibold border border-primary/10 transition-colors"
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{interesLabels[interes] || interes}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No has seleccionado intereses específicos aún.</p>
+            )}
+          </div>
+
+          {/* Bloque: Requerimientos y Parámetros Logísticos */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {[
+              { label: "Compañía de viaje", value: preferencias.compania, icon: User },
+              { label: "Presupuesto estimado", value: preferencias.presupuesto, icon: CreditCard },
+              { label: "Clima preferido", value: preferencias.clima, icon: MapPin },
+              { label: "Ritmo del viaje", value: preferencias.ritmo, icon: Clock },
+              { label: "Transporte idóneo", value: preferencias.transporte, icon: Plane },
+            ]
+              .filter(item => item.value)
+              .map(item => {
+                const Icon = item.icon;
                 return (
-                  <div key={interes} className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-[#2563EB] rounded-full text-sm font-medium border border-blue-100">
-                    <Icon className="w-4 h-4" />
-                    {interesLabels[interes] || interes}
+                  <div
+                    key={item.label}
+                    className="bg-card text-card-foreground border border-border rounded-xl p-4 flex items-center gap-3.5 shadow-sm transition-colors duration-200"
+                  >
+                    <div className="w-10 h-10 bg-primary/5 border border-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                        {item.label}
+                      </span>
+                      <p className="font-bold text-foreground text-sm capitalize truncate mt-0.5">
+                        {item.value}
+                      </p>
+                    </div>
                   </div>
                 );
               })}
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           {[
-  { label: "Compañía de viaje", value: preferencias.compania, icon: User },
-  { label: "Presupuesto", value: preferencias.presupuesto, icon: CreditCard },
-  { label: "Clima preferido", value: preferencias.clima, icon: MapPin },
-  { label: "Ritmo del viaje", value: preferencias.ritmo, icon: Clock },
-  { label: "Transporte", value: preferencias.transporte, icon: Plane },
-].filter(item => item.value).map(item => (
-  <div key={item.label} className="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
-    <div className="w-12 h-12 bg-gradient-to-br from-[#2563EB] to-[#06B6D4] rounded-xl flex items-center justify-center shrink-0">
-      <item.icon className="w-6 h-6 text-white" />
-    </div>
-    <div>
-      <p className="text-xs text-gray-500">{item.label}</p>
-      <p className="font-semibold text-gray-900 capitalize">{item.value}</p>
-    </div>
-  </div>
-))}
-          </div>
         </div>
       )}
     </>

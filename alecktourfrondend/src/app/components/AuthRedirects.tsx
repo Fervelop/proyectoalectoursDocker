@@ -9,7 +9,7 @@ export function LoginRedirect() {
         openLogin();
     }, []);
 
-    return <Navigate to="/" replace />;
+    return <Navigate to="/profile" replace />;
 }
 
 export function RegisterRedirect() {
