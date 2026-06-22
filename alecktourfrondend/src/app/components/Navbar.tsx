@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,7 +55,9 @@ export default function Navbar() {
                   AleckTours
                 </span>
                 <p className="text-xs text-muted-foreground -mt-1 font-normal">Viaja con estilo</p>
+
               </div>
+
             </Link>
 
             {/* Desktop Navigation */}
@@ -138,6 +141,7 @@ export default function Navbar() {
                   Información
                   <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </button>
+
                 <AnimatePresence>
                   {showInfoMenu && (
                     <motion.div
@@ -159,6 +163,7 @@ export default function Navbar() {
                       </Link>
                     </motion.div>
                   )}
+
                 </AnimatePresence>
               </div>
 
@@ -197,7 +202,10 @@ export default function Navbar() {
                 </motion.button>
               )}
             </div>
-
+            <div className="flex items-center gap-4">
+              {/* Tus otros links aquí */}
+              <ThemeToggle />
+            </div>
             {/* Mobile menu button */}
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -273,10 +281,13 @@ export default function Navbar() {
                       </button>
                     </div>
                   )}
+
                 </div>
               </motion.div>
             )}
+
           </AnimatePresence>
+
         </div>
       </motion.nav>
 
