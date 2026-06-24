@@ -65,27 +65,9 @@ export default function Contact() {
               </h2>
 
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-[#7B1E3A]/5 rounded-2xl flex items-center justify-center text-[#7B1E3A] flex-shrink-0">
-                    <Phone className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-500 text-xs uppercase tracking-wider">Llámanos o WhatsApp</h3>
-                    <p className="text-gray-900 font-bold text-lg mt-0.5">+57 (300) 123-4567</p>
-                    <p className="text-gray-500 text-sm">Línea de atención nacional</p>
-                  </div>
-                </div>
+                
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-[#7B1E3A]/5 rounded-2xl flex items-center justify-center text-[#7B1E3A] flex-shrink-0">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-500 text-xs uppercase tracking-wider">Correos Electrónicos</h3>
-                    <p className="text-gray-900 font-bold text-base mt-0.5">soporte@alectours.com</p>
-                    <p className="text-gray-500 text-sm">reservas@alectours.com</p>
-                  </div>
-                </div>
+               
 
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-[#7B1E3A]/5 rounded-2xl flex items-center justify-center text-[#7B1E3A] flex-shrink-0">

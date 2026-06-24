@@ -3,7 +3,7 @@ import { Link } from "react-router";
 
 const columns = [
     {
-        title: "AleckTours",
+        title: "AlekTours",
         links: [
             { label: "Quiénes somos", to: "/" },
             { label: "Sostenibilidad", to: "/sustainability" },
@@ -49,7 +49,7 @@ export default function Footer() {
                                 className="text-xl text-[#2E2E2E]"
                                 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}
                             >
-                                Aleck<span className="text-[#7B1E3A]">Tours</span>
+                                Alek<span className="text-[#7B1E3A]">Tours</span>
                             </span>
                         </Link>
                         <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6 max-w-xs">
@@ -61,14 +61,8 @@ export default function Footer() {
                                 <MapPin className="w-4 h-4 text-[#C9A227] shrink-0" />
                                 <span>Bogotá, Colombia</span>
                             </div>
-                            <div className="flex items-center gap-2.5">
-                                <Phone className="w-4 h-4 text-[#C9A227] shrink-0" />
-                                <span>+57 601 800 4321</span>
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                                <Mail className="w-4 h-4 text-[#C9A227] shrink-0" />
-                                <span>hola@alecktours.com</span>
-                            </div>
+                           
+                            
                         </div>
                     </div>
 

@@ -190,15 +190,15 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
                                             <form onSubmit={handleSubmit} className="space-y-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-foreground mb-1.5">Usuario</label>
+                                                    <label className="block text-sm font-medium text-foreground mb-1.5">Correo electronico</label>
                                                     <div className="relative">
                                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                                         <input
-                                                            type="text"
+                                                            type="email"
                                                             name="username"
                                                             value={formData.username}
                                                             onChange={handleChange}
-                                                            placeholder="juanperez123"
+                                                            placeholder="alek@example.com"
                                                             required
                                                             // FIX 1: autoFocus eliminado para evitar el scroll
                                                             className="w-full pl-12 pr-4 py-3 bg-input-background border border-border rounded-md text-sm focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground transition-shadow placeholder:text-muted-foreground"

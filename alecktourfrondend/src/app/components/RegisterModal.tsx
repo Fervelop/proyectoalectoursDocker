@@ -15,12 +15,14 @@ interface RegisterModalProps {
 }
 
 const initialFormData = {
-    username: "", correo_electronico: "", password: "", confirmPassword: "",
+    correo_electronico: "", password: "", confirmPassword: "",
     nombre: "", apellido: "", cedula: "", celular: "",
     direccion: "", ciudad: "", pais: "Colombia", fecha_nacimiento: "",
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Mínimo 6 caracteres, al menos 1 mayúscula, 1 minúscula y 1 número
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
 function calcAge(dateStr: string) {
     if (!dateStr) return 0;
@@ -68,6 +70,46 @@ function Field({ icon, error, suffix, children }: FieldProps) {
     );
 }
 
+// Indicador visual de fuerza de contraseña
+function PasswordStrength({ password }: { password: string }) {
+    if (!password) return null;
+    const hasLower   = /[a-z]/.test(password);
+    const hasUpper   = /[A-Z]/.test(password);
+    const hasNumber  = /\d/.test(password);
+    const hasLength  = password.length >= 6;
+
+    const checks = [
+        { label: "Minúscula", ok: hasLower },
+        { label: "Mayúscula", ok: hasUpper },
+        { label: "Número",    ok: hasNumber },
+        { label: "6+ chars",  ok: hasLength },
+    ];
+
+    const passed = checks.filter(c => c.ok).length;
+    const barColor =
+        passed <= 1 ? "bg-destructive" :
+        passed <= 2 ? "bg-[#C9A227]" :
+        passed <= 3 ? "bg-[#A13B55]" :
+        "bg-[#7B1E3A]";
+
+    return (
+        <div className="space-y-1.5 px-1">
+            <div className="flex gap-1 h-1">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className={`flex-1 rounded-full transition-all duration-300 ${i <= passed ? barColor : "bg-border"}`} />
+                ))}
+            </div>
+            <div className="flex gap-2 flex-wrap">
+                {checks.map(({ label, ok }) => (
+                    <span key={label} className={`text-[10px] font-medium flex items-center gap-0.5 transition-colors ${ok ? "text-[#7B1E3A]" : "text-muted-foreground"}`}>
+                        <span>{ok ? "✓" : "○"}</span> {label}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -84,23 +126,21 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     const [showTerminos, setShowTerminos] = useState(false);
     const [showPrivacidad, setShowPrivacidad] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         if (formError) setFormError("");
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
         setTouched((t) => ({ ...t, [e.target.name]: true }));
     };
 
     const errors = useMemo(() => {
         const e: Record<string, string> = {};
-        if (formData.username && formData.username.trim().length < 3)
-            e.username = "Mínimo 3 caracteres";
         if (formData.correo_electronico && !EMAIL_REGEX.test(formData.correo_electronico))
             e.correo_electronico = "Correo inválido";
-        if (formData.password && formData.password.length < 6)
-            e.password = "Mínimo 6 caracteres";
+        if (formData.password && !PASSWORD_REGEX.test(formData.password))
+            e.password = "Debe tener mayúscula, minúscula y número";
         if (formData.confirmPassword && formData.confirmPassword !== formData.password)
             e.confirmPassword = "Las contraseñas no coinciden";
         if (formData.cedula && !/^\d{6,12}$/.test(formData.cedula))
@@ -113,9 +153,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     }, [formData]);
 
     const requiredFilled =
-        formData.username.trim().length >= 3 &&
         EMAIL_REGEX.test(formData.correo_electronico) &&
-        formData.password.length >= 6 &&
+        PASSWORD_REGEX.test(formData.password) &&
         formData.confirmPassword === formData.password &&
         formData.nombre.trim().length > 0 &&
         formData.apellido.trim().length > 0 &&
@@ -147,8 +186,11 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         setFormError("");
         setLoading(true);
         try {
+            // username = correo_electronico (mismo valor)
+            const username = formData.correo_electronico;
+
             const res = await authService.register({
-                username: formData.username,
+                username,
                 correo_electronico: formData.correo_electronico,
                 password: formData.password,
             });
@@ -220,7 +262,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                             onClick={(e) => e.stopPropagation()}
                             className="relative w-full max-w-lg my-8 rounded-xl shadow-2xl border border-border overflow-hidden bg-card text-card-foreground max-h-[90vh] flex flex-col"
                         >
-                            {/* ── Header con tu paleta Granate / Accent ── */}
+                            {/* ── Header ── */}
                             <div className="relative px-8 py-6 flex-shrink-0 overflow-hidden bg-primary text-primary-foreground">
                                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5 blur-xl" />
                                 <div className="absolute top-4 -right-4 w-20 h-20 rounded-full bg-white/5 blur-lg" />
@@ -246,7 +288,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                     Únete y empieza a explorar el mundo con la mejor experiencia de viaje ✈️
                                 </p>
 
-                                {/* Pasos de progreso con estilos limpios */}
                                 <div className="flex items-center gap-4 mt-5 relative bg-black/10 backdrop-blur-sm rounded-lg px-4 py-2 w-fit">
                                     {["Acceso", "Perfil", "Listo"].map((step, i) => (
                                         <div key={step} className="flex items-center gap-2">
@@ -257,7 +298,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                 </div>
                             </div>
 
-                            {/* ── Cuerpo del Formulario ── */}
+                            {/* ── Cuerpo ── */}
                             <div className="px-8 py-6 overflow-y-auto flex-1 bg-card">
                                 {success ? (
                                     <motion.div
@@ -315,51 +356,69 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <Field icon={<User className="w-4 h-4" />} error={fieldError("username")}>
-                                                        <input type="text" name="username" value={formData.username}
-                                                            onChange={handleChange} onBlur={handleBlur}
-                                                            placeholder="Nombre de usuario"
-                                                            required minLength={3} maxLength={50}
-                                                            className={inputBase("username")} />
-                                                    </Field>
-
+                                                    {/* Correo — sirve también como username */}
                                                     <Field icon={<Mail className="w-4 h-4" />} error={fieldError("correo_electronico")}>
-                                                        <input type="email" name="correo_electronico" value={formData.correo_electronico}
-                                                            onChange={handleChange} onBlur={handleBlur}
-                                                            placeholder="Correo electrónico" required
-                                                            className={inputBase("correo_electronico")} />
+                                                        <input
+                                                            type="email"
+                                                            name="correo_electronico"
+                                                            value={formData.correo_electronico}
+                                                            onChange={handleChange}
+                                                            onBlur={handleBlur}
+                                                            placeholder="Correo electrónico (será tu usuario)"
+                                                            required
+                                                            className={inputBase("correo_electronico")}
+                                                        />
                                                     </Field>
 
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                        <Field icon={<Lock className="w-4 h-4" />} error={fieldError("password")}
+                                                        <Field
+                                                            icon={<Lock className="w-4 h-4" />}
+                                                            error={fieldError("password")}
                                                             suffix={
                                                                 <button type="button" tabIndex={-1}
                                                                     onClick={() => setShowPassword(s => !s)}
                                                                     className="text-muted-foreground hover:text-primary transition-colors p-1">
                                                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                                 </button>
-                                                            }>
-                                                            <input type={showPassword ? "text" : "password"}
-                                                                name="password" value={formData.password}
-                                                                onChange={handleChange} onBlur={handleBlur}
-                                                                placeholder="Contraseña" required
-                                                                className={inputBase("password") + " pr-10"} />
+                                                            }
+                                                        >
+                                                            <input
+                                                                type={showPassword ? "text" : "password"}
+                                                                name="password"
+                                                                value={formData.password}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                placeholder="Contraseña"
+                                                                required
+                                                                className={inputBase("password") + " pr-10"}
+                                                            />
                                                         </Field>
-                                                        <Field icon={<Lock className="w-4 h-4" />} error={fieldError("confirmPassword")}
+                                                        <Field
+                                                            icon={<Lock className="w-4 h-4" />}
+                                                            error={fieldError("confirmPassword")}
                                                             suffix={
                                                                 <button type="button" tabIndex={-1}
                                                                     onClick={() => setShowConfirmPassword(s => !s)}
                                                                     className="text-muted-foreground hover:text-primary transition-colors p-1">
                                                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                                 </button>
-                                                            }>
-                                                            <input type={showConfirmPassword ? "text" : "password"}
-                                                                name="confirmPassword" value={formData.confirmPassword}
-                                                                onChange={handleChange} onBlur={handleBlur}
-                                                                placeholder="Confirmar" required
-                                                                className={inputBase("confirmPassword") + " pr-10"} />
+                                                            }
+                                                        >
+                                                            <input
+                                                                type={showConfirmPassword ? "text" : "password"}
+                                                                name="confirmPassword"
+                                                                value={formData.confirmPassword}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                placeholder="Confirmar"
+                                                                required
+                                                                className={inputBase("confirmPassword") + " pr-10"}
+                                                            />
                                                         </Field>
                                                     </div>
+
+                                                    {/* Indicador de fuerza — solo si hay algo escrito */}
+                                                    <PasswordStrength password={formData.password} />
                                                 </div>
                                             </div>
 
@@ -406,9 +465,10 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                                 name="ciudad"
                                                                 value={formData.ciudad}
                                                                 onChange={handleChange}
+                                                                onBlur={handleBlur}
                                                                 className={inputBase("ciudad")}
                                                             >
-                                                                <option value="" disabled>  ciudad</option>
+                                                                <option value="" disabled>Ciudad</option>
                                                                 <option value="Bogotá">Bogotá</option>
                                                                 <option value="Medellín">Medellín</option>
                                                                 <option value="Cali">Cali</option>
@@ -419,7 +479,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                                 <option value="Manizales">Manizales</option>
                                                                 <option value="Santa Marta">Santa Marta</option>
                                                                 <option value="Cúcuta">Cúcuta</option>
-                                                                {/* Agrega más ciudades según sea necesario */}
                                                             </select>
                                                         </Field>
                                                         <Field icon={<Calendar className="w-4 h-4" />} error={fieldError("fecha_nacimiento")}>
@@ -437,7 +496,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                 </div>
                                             </div>
 
-                                            {/* Checkbox de Términos */}
+                                            {/* Checkbox Términos */}
                                             <label className="flex items-start gap-3 cursor-pointer select-none px-1 py-1 group">
                                                 <div className="relative mt-0.5 flex-shrink-0">
                                                     <input type="checkbox" checked={acceptedTerms}
@@ -468,7 +527,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                                                 </span>
                                             </label>
 
-                                            {/* Botón de Envió Principal */}
+                                            {/* Botón submit */}
                                             <div className="pt-2">
                                                 <button type="submit" disabled={!isFormValid || loading}
                                                     className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm tracking-wide transition-all duration-200 shadow-md hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"

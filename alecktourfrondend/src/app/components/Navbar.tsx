@@ -1,11 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Building2, ChevronDown, Gift, LogIn, LogOut, Menu, Plane, User, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import { ThemeToggle } from "./ThemeToggle";
+import { clienteService, ClienteResponse } from "../services/cliente.service";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,24 +15,42 @@ export default function Navbar() {
   const [showInfoMenu, setShowInfoMenu] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [cliente, setCliente] = useState<ClienteResponse | null>(null);
+
   const navigate = useNavigate();
   const { isAuthenticated, usuario, logout } = useAuth();
 
+  // Fetch del cliente cuando hay sesión activa y existe id_cliente
+  useEffect(() => {
+    if (isAuthenticated && usuario?.id_cliente) {
+      clienteService.getById(usuario.id_cliente)
+        .then(setCliente)
+        .catch(() => setCliente(null));
+    } else {
+      setCliente(null);
+    }
+  }, [isAuthenticated, usuario?.id_cliente]);
+
   const handleLogout = () => {
     logout();
+    setCliente(null);
     navigate("/");
   };
+
   function getRoleLabel(roles?: string[]) {
     if (!roles || roles.length === 0) return "Cliente";
-
     if (roles.includes("admin")) return "Admin";
     if (roles.includes("empleado")) return "Empleado";
     if (roles.includes("cliente")) return "Cliente";
-
     return roles[0];
   }
+
+  // Nombre a mostrar: nombre+apellido del cliente si existe, si no username
+  const displayName = cliente
+    ? `${cliente.nombre} ${cliente.apellido}`
+    : (usuario?.username ?? "");
+
   return (
-    // FIX: Fragment para que los modales queden FUERA del <nav> sticky
     <>
       <motion.nav
         initial={{ y: -100 }}
@@ -52,12 +71,10 @@ export default function Navbar() {
               </motion.div>
               <div>
                 <span className="text-2xl font-bold tracking-tight text-primary">
-                  AleckTours
+                  AlekTours
                 </span>
                 <p className="text-xs text-muted-foreground -mt-1 font-normal">Viaja con estilo</p>
-
               </div>
-
             </Link>
 
             {/* Desktop Navigation */}
@@ -141,7 +158,6 @@ export default function Navbar() {
                   Información
                   <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </button>
-
                 <AnimatePresence>
                   {showInfoMenu && (
                     <motion.div
@@ -163,20 +179,19 @@ export default function Navbar() {
                       </Link>
                     </motion.div>
                   )}
-
                 </AnimatePresence>
               </div>
 
-              {/* Login/Profile Button */}
+              {/* Login / Perfil */}
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
                   <Link
                     to="/profile"
                     className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 shadow-sm transition-all duration-300 font-medium text-sm"
                   >
-                    <User className="w-4 h-4" />
-                    {usuario?.username}
-                    <span className="text-[12px] opacity-75 uppercase tracking-wider font-normal">
+                    <User className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate max-w-[140px]">{displayName}</span>
+                    <span className="text-[12px] opacity-75 uppercase tracking-wider font-normal flex-shrink-0">
                       {getRoleLabel(usuario?.roles)}
                     </span>
                   </Link>
@@ -202,10 +217,11 @@ export default function Navbar() {
                 </motion.button>
               )}
             </div>
+
             <div className="flex items-center gap-4">
-              {/* Tus otros links aquí */}
               <ThemeToggle />
             </div>
+
             {/* Mobile menu button */}
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -241,72 +257,56 @@ export default function Navbar() {
                       <Link
                         to="/profile"
                         className="flex items-center gap-3 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:opacity-90 shadow-sm transition-all duration-300"
+                        onClick={() => setIsMenuOpen(false)}
                       >
-                        <User className="w-4 h-4" />
-
+                        <User className="w-4 h-4 flex-shrink-0" />
                         <div className="flex flex-col items-start leading-none">
-                          <span className="font-medium">
-                            {usuario?.username}
-                          </span>
-
+                          <span className="font-medium">{displayName}</span>
                           <span className="text-[12px] opacity-75 uppercase tracking-wider font-normal">
                             {getRoleLabel(usuario?.roles)}
                           </span>
                         </div>
                       </Link>
-
-                      <button onClick={handleLogout} className="px-4 py-2.5 text-destructive hover:bg-destructive/10 rounded-lg text-center font-medium text-sm">
+                      <button
+                        onClick={handleLogout}
+                        className="px-4 py-2.5 text-destructive hover:bg-destructive/10 rounded-lg text-center font-medium text-sm"
+                      >
                         Cerrar sesión
                       </button>
                     </>
                   ) : (
                     <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
                       <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setShowLoginModal(true);
-                        }}
+                        onClick={() => { setIsMenuOpen(false); setShowLoginModal(true); }}
                         className="px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-center font-medium text-sm"
                       >
                         Iniciar Sesión
                       </button>
                       <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setShowRegisterModal(true);
-                        }}
+                        onClick={() => { setIsMenuOpen(false); setShowRegisterModal(true); }}
                         className="px-4 py-2.5 border border-border text-foreground rounded-lg text-center font-medium text-sm hover:bg-muted"
                       >
                         Crear cuenta
                       </button>
                     </div>
                   )}
-
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
-
         </div>
       </motion.nav>
 
-      {/* FIX: Modales FUERA del <nav> sticky para que no queden atrapados ni recortados */}
+      {/* Modales fuera del nav sticky */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
-        onSwitchToRegister={() => {
-          setShowLoginModal(false);
-          setShowRegisterModal(true);
-        }}
+        onSwitchToRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }}
       />
       <RegisterModal
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
-        onSwitchToLogin={() => {
-          setShowRegisterModal(false);
-          setShowLoginModal(true);
-        }}
+        onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }}
       />
     </>
   );

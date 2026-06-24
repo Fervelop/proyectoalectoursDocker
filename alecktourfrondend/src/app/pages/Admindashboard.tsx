@@ -18,13 +18,13 @@ import ModuleClientes from "../components/admin/ModuleClientes";
 type Module = "dashboard" | "reservas" | "crear-reserva" | "hoteles" | "paquetes" | "clientes" | "usuarios";
 
 const NAV_ITEMS = [
-  { id: "dashboard",     label: "Dashboard",    icon: LayoutDashboard },
-  { id: "reservas",      label: "Reservas",      icon: CalendarDays    },
-  { id: "crear-reserva", label: "Crear Reserva", icon: PlusCircle      },
-  { id: "hoteles",       label: "Hoteles",        icon: Hotel           },
-  { id: "paquetes",      label: "Paquetes",       icon: Package         },
-  { id: "clientes",      label: "Clientes",       icon: Users           },
-  { id: "usuarios",      label: "Usuarios",       icon: UserPlus        },
+  { id: "dashboard",     label: "Dashboard",     icon: LayoutDashboard },
+  { id: "reservas",      label: "Reservas",       icon: CalendarDays    },
+  { id: "crear-reserva", label: "Crear Reserva",  icon: PlusCircle      },
+  { id: "hoteles",       label: "Hoteles",         icon: Hotel           },
+  { id: "paquetes",      label: "Paquetes",        icon: Package         },
+  { id: "clientes",      label: "Clientes",        icon: Users           },
+  { id: "usuarios",      label: "Usuarios",        icon: UserPlus        },
 ] as const;
 
 export default function AdminDashboard() {
@@ -59,12 +59,12 @@ export default function AdminDashboard() {
     if (activeModule === "clientes"      || activeModule === "crear-reserva") fetchClientes();
   }, [activeModule]);
 
-  const fetchReservas  = async () => { try { setReservas(await apiFetch<Reserva[]>("/reservas?limit=100"));     } catch {} };
-  const fetchHoteles   = async () => { try { setHoteles(await apiFetch<HotelData[]>("/hoteles/?limit=100"));    } catch {} };
-  const fetchPaquetes  = async () => { try { setPaquetes(await apiFetch<Paquete[]>("/paquetes?limit=100"));     } catch {} };
-  const fetchClientes  = async () => { try { setClientes(await apiFetch<Cliente[]>("/clientes?limit=100"));     } catch {} };
-  const fetchEmpleados = async () => { try { setEmpleados(await apiFetch<Empleado[]>("/empleados?limit=100")); } catch {} };
-  const fetchPagos     = async () => { try { setPagos(await apiFetch<Pago[]>("/pagos?limit=100"));              } catch {} };
+  const fetchReservas  = async () => { try { setReservas(await apiFetch<Reserva[]>("/reservas?limit=100"));      } catch {} };
+  const fetchHoteles   = async () => { try { setHoteles(await apiFetch<HotelData[]>("/hoteles/?limit=100"));     } catch {} };
+  const fetchPaquetes  = async () => { try { setPaquetes(await apiFetch<Paquete[]>("/paquetes?limit=100"));      } catch {} };
+  const fetchClientes  = async () => { try { setClientes(await apiFetch<Cliente[]>("/clientes?limit=100"));      } catch {} };
+  const fetchEmpleados = async () => { try { setEmpleados(await apiFetch<Empleado[]>("/empleados?limit=100"));   } catch {} };
+  const fetchPagos     = async () => { try { setPagos(await apiFetch<Pago[]>("/pagos?limit=100"));               } catch {} };
 
   const deleteReserva = async (id: number) => {
     if (!confirm("¿Eliminar esta reserva?")) return;
@@ -145,9 +145,9 @@ export default function AdminDashboard() {
     ),
     usuarios: (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Usuarios</h2>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-          <UserPlus className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+        <h2 className="text-2xl font-bold text-foreground">Usuarios</h2>
+        <div className="bg-card rounded-2xl p-8 shadow-sm border border-border text-center text-muted-foreground">
+          <UserPlus className="w-12 h-12 mx-auto mb-3 text-[rgba(123,30,58,0.25)]" />
           <p>Módulo de usuarios en construcción</p>
         </div>
       </div>
@@ -155,10 +155,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-background flex flex-col transition-colors duration-300">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="h-16 bg-gradient-to-r from-[#1e3a8a] via-[#0e7490] to-[#b45309] flex items-center px-6 gap-4 sticky top-0 z-40 shadow-lg">
+      <header className="h-16 bg-gradient-to-r from-[#7B1E3A] via-[#A13B55] to-[#C9A227] flex items-center px-6 gap-4 sticky top-0 z-40 shadow-lg">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="text-white/80 hover:text-white transition-colors lg:hidden"
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
             <Plane className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white font-bold text-lg hidden sm:block">AlecTours</span>
+          <span className="text-white font-bold text-lg hidden sm:block">AlekTours</span>
           <span className="text-white/60 text-sm hidden sm:block">/ Admin</span>
         </Link>
 
@@ -190,8 +190,8 @@ export default function AdminDashboard() {
               className="w-5 h-5 rounded-full bg-white shadow flex items-center justify-center"
             >
               {dark
-                ? <Moon className="w-3 h-3 text-indigo-600" />
-                : <Sun className="w-3 h-3 text-amber-500" />
+                ? <Moon className="w-3 h-3 text-[#7B1E3A]" />
+                : <Sun className="w-3 h-3 text-[#C9A227]" />
               }
             </motion.div>
           </button>
@@ -221,12 +221,11 @@ export default function AdminDashboard() {
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="w-64 flex-shrink-0 flex flex-col border-r transition-colors duration-300
-                bg-white border-gray-100
-                dark:bg-[#13151f] dark:border-[#1e2130]"
+                bg-sidebar border-sidebar-border"
             >
               {/* Logo area en sidebar */}
-              <div className="px-5 py-4 border-b border-gray-100 dark:border-[#1e2130]">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              <div className="px-5 py-4 border-b border-sidebar-border">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                   Panel de control
                 </p>
               </div>
@@ -240,11 +239,11 @@ export default function AdminDashboard() {
                       onClick={() => setActiveModule(id as Module)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                         isActive
-                          ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/20"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#1e2130]"
+                          ? "bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white shadow-lg shadow-[rgba(123,30,58,0.25)]"
+                          : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                       }`}
                     >
-                      <Icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform group-hover:scale-110 ${isActive ? "text-white" : ""}`} />
+                      <Icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${isActive ? "text-white" : ""}`} />
                       <span>{label}</span>
                       {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-70" />}
                     </button>
@@ -253,26 +252,24 @@ export default function AdminDashboard() {
               </nav>
 
               {/* Footer sidebar */}
-              <div className="p-3 border-t border-gray-100 dark:border-[#1e2130] space-y-1">
+              <div className="p-3 border-t border-sidebar-border space-y-1">
                 {/* Info usuario */}
-                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl
-                  bg-gray-50 dark:bg-[#1e2130]">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-sidebar-accent">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#7B1E3A] to-[#C9A227] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {usuario?.username?.[0]?.toUpperCase() ?? "A"}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                    <p className="text-xs font-semibold text-sidebar-foreground truncate">
                       {usuario?.username}
                     </p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500">Administrador</p>
+                    <p className="text-[10px] text-muted-foreground">Administrador</p>
                   </div>
                 </div>
 
                 <Link
                   to="/"
                   className="flex items-center gap-2 px-4 py-2 text-xs rounded-xl transition-all
-                    text-gray-500 hover:text-gray-700 hover:bg-gray-50
-                    dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-[#1e2130]"
+                    text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 >
                   <Plane className="w-3.5 h-3.5" /> Ir al sitio
                 </Link>
@@ -282,8 +279,7 @@ export default function AdminDashboard() {
         </AnimatePresence>
 
         {/* ── Main content ─────────────────────────────────────────────────── */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 transition-colors duration-300
-          bg-gray-50 dark:bg-[#0f1117]">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 transition-colors duration-300 bg-background">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeModule}
