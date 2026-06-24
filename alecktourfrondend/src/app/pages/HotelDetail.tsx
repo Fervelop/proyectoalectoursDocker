@@ -24,7 +24,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import Navbar from "../components/Navbar";
 import { HotelDetailResponse, hotelService } from "../services/hotel.service";
-
+import Footer from "../components/Footer"
 // ── Mapa de íconos de características con colores semánticos basados en tu tema ──
 const CARACTERISTICA_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
   "Piscina al aire libre": { icon: Waves, color: "text-primary" },
@@ -121,6 +121,7 @@ export default function HotelDetail() {
   const caracteristicas = hotel.hotel_caracteristicas ?? [];
 
   return (
+    <>
     <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       <Navbar />
 
@@ -340,5 +341,7 @@ export default function HotelDetail() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

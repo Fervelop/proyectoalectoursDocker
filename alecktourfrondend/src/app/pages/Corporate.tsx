@@ -1,7 +1,7 @@
 import { Building2, Calendar, Check, Headphones, Shield, Sparkles, TrendingDown } from "lucide-react";
 import { motion } from "motion/react";
 import Navbar from "../components/Navbar";
-
+import Footer from "../components/Footer";
 export default function Corporate() {
   const partners = [
     { name: "Bancolombia", logo: "🏦" },
@@ -86,6 +86,7 @@ export default function Corporate() {
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
@@ -391,5 +392,7 @@ export default function Corporate() {
         </div>
       </section>
     </div>
+    <Footer/>
+    </>
   );
 }

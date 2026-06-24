@@ -1,7 +1,7 @@
 import { Award, Crown, Gift, Plane, Sparkles, Star, TrendingUp, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import Navbar from "../components/Navbar";
-
+import Footer from "../components/Footer";
 export default function Benefits() {
   const benefits = [
     {
@@ -71,6 +71,7 @@ export default function Benefits() {
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
@@ -233,5 +234,7 @@ export default function Benefits() {
         </div>
       </section>
     </div>
+    <Footer/>
+    </>
   );
 }

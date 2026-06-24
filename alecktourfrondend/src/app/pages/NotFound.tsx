@@ -1,5 +1,7 @@
+import Footer from "../components/Footer";
 export default function NotFound() {
     return (
+        <>
         <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-6 text-center">
 
             {/* 404 Estilo Tipográfico Minimalista */}
@@ -41,6 +43,10 @@ export default function NotFound() {
             <div className="absolute bottom-10 text-xs text-muted-foreground/50">
                 © 2026 Agencia
             </div>
+
         </div>
+        <Footer />
+
+        </>
     );
 }

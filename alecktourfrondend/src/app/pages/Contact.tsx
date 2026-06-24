@@ -2,7 +2,7 @@ import { CheckCircle2, Clock, Mail, MapPin, MessageSquare, Phone, Send } from "l
 import { AnimatePresence, motion } from "motion/react";
 import { FormEvent, useState } from "react";
 import Navbar from "../components/Navbar";
-
+import Footer from "../components/Footer";
 export default function Contact() {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
@@ -28,6 +28,7 @@ export default function Contact() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
@@ -222,5 +223,7 @@ export default function Contact() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

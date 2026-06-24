@@ -2,7 +2,7 @@ import { ChevronDown, HelpCircle, MessageCircle, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-
+import Footer from "../components/Footer";
 interface FAQItem {
   pregunta: string;
   respuesta: string;
@@ -53,6 +53,7 @@ export default function FAQ() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
@@ -198,5 +199,7 @@ export default function FAQ() {
         </motion.div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

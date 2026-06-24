@@ -14,7 +14,6 @@ const columns = [
         links: [
             { label: "Centro de ayuda", to: "/faq" },
             { label: "Cómo reservar", to: "/travel-info" },
-            { label: "Cambios y cancelaciones", to: "/policies" },
             { label: "Contáctanos", to: "/contact" },
         ],
     },
@@ -22,7 +21,6 @@ const columns = [
         title: "Para empresas",
         links: [
             { label: "Convenios corporativos", to: "/corporate" },
-            { label: "Viajes de grupo", to: "/groups" },
             { label: "Programa de puntos", to: "/benefits" },
         ],
     },

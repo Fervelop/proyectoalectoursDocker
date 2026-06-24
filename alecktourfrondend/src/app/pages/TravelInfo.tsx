@@ -2,7 +2,7 @@ import { AlertCircle, Clock, CreditCard, FileText, Luggage, MapPin, Plane, Shiel
 import { motion } from "motion/react";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-
+import Footer from "../components/Footer";
 export default function TravelInfo() {
   const [activeTab, setActiveTab] = useState("documentos");
 
@@ -141,6 +141,7 @@ export default function TravelInfo() {
   const activeContent = content[activeTab as keyof typeof content];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
@@ -298,5 +299,7 @@ export default function TravelInfo() {
         </div>
       </section>
     </div>
+    <Footer/>
+    </>
   );
 }

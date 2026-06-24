@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import HotelCard from "../components/HotelCard";
 import Navbar from "../components/Navbar";
 import { HotelResponse, hotelService } from "../services/hotel.service";
-
+import Footer from "../components/Footer";
 export default function SearchResults() {
   const [hoteles, setHoteles] = useState<HotelResponse[]>([]);
   const [filtrados, setFiltrados] = useState<HotelResponse[]>([]);
@@ -126,6 +126,7 @@ export default function SearchResults() {
   );
 
   return (
+    <>
     <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       <Navbar />
 
@@ -231,5 +232,7 @@ export default function SearchResults() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }
