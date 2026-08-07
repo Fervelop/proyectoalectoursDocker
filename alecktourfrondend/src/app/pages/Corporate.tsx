@@ -1,7 +1,7 @@
-import Navbar from "../components/Navbar";
-import { Building2, Users, TrendingDown, Calendar, Shield, Headphones, Sparkles, Check } from "lucide-react";
+import { Building2, Calendar, Check, Headphones, Shield, Sparkles, TrendingDown } from "lucide-react";
 import { motion } from "motion/react";
-
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 export default function Corporate() {
   const partners = [
     { name: "Bancolombia", logo: "🏦" },
@@ -14,30 +14,31 @@ export default function Corporate() {
     { name: "Cementos Argos", logo: "🏗️" },
   ];
 
+  // Gradients actualizados a la paleta AlecTours
   const benefits = [
     {
       icon: TrendingDown,
       title: "Descuentos corporativos",
       description: "Hasta 25% de descuento en paquetes para grupos empresariales",
-      gradient: "from-blue-500 to-cyan-500",
+      gradient: "from-[#7B1E3A] to-[#A13B55]",
     },
     {
       icon: Calendar,
       title: "Gestión centralizada",
       description: "Administra todas las reservas de tu empresa desde un solo panel",
-      gradient: "from-purple-500 to-indigo-500",
+      gradient: "from-[#A13B55] to-[#7B1E3A]",
     },
     {
       icon: Shield,
       title: "Facturación especial",
       description: "Facturación electrónica y reportes detallados para tu contabilidad",
-      gradient: "from-green-500 to-emerald-500",
+      gradient: "from-[#7B1E3A] to-[#C9A227]",
     },
     {
       icon: Headphones,
       title: "Ejecutivo dedicado",
       description: "Asesor personal para resolver todas las necesidades de tu empresa",
-      gradient: "from-orange-500 to-red-500",
+      gradient: "from-[#C9A227] to-[#A13B55]",
     },
   ];
 
@@ -85,12 +86,13 @@ export default function Corporate() {
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
-      {/* Hero Section */}
+      {/* Hero Section - Modificado a la paleta principal de AlecTours */}
       <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7B1E3A] via-[#8c2543] to-[#A13B55]" />
         <div className="absolute inset-0">
           <motion.div
             animate={{
@@ -117,7 +119,7 @@ export default function Corporate() {
               transition={{ delay: 0.2 }}
               className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full mb-6"
             >
-              <Building2 className="w-5 h-5" />
+              <Building2 className="w-5 h-5 text-[#C9A227]" />
               <span className="font-semibold">Soluciones corporativas</span>
             </motion.div>
 
@@ -132,7 +134,7 @@ export default function Corporate() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               href="#contact"
-              className="inline-block px-10 py-4 bg-white text-indigo-600 rounded-full font-bold text-lg hover:shadow-2xl transition-all"
+              className="inline-block px-10 py-4 bg-white text-[#7B1E3A] rounded-full font-bold text-lg hover:shadow-2xl transition-all"
             >
               Solicita una cotización
             </motion.a>
@@ -207,7 +209,7 @@ export default function Corporate() {
                 <div className={`w-16 h-16 bg-gradient-to-br ${benefit.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}>
                   <benefit.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">{benefit.title}</h3>
                 <p className="text-gray-600">{benefit.description}</p>
               </motion.div>
             ))}
@@ -215,7 +217,7 @@ export default function Corporate() {
         </div>
       </section>
 
-      {/* Plans Section */}
+      {/* Plans Section - Ajustado con el borde Granate y Oro de AlecTours */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
@@ -241,23 +243,22 @@ export default function Corporate() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
                 whileHover={{ scale: plan.popular ? 1.05 : 1.02, y: -10 }}
-                className={`relative bg-white rounded-3xl p-8 shadow-xl ${
-                  plan.popular ? "border-4 border-[#FF6B35]" : "border-2 border-gray-200"
-                }`}
+                className={`relative bg-white rounded-3xl p-8 shadow-xl ${plan.popular ? "border-4 border-[#7B1E3A]" : "border-2 border-gray-200"
+                  }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <div className="bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" />
+                    <div className="bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#C9A227]" />
                       Más popular
                     </div>
                   </div>
                 )}
 
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                  <h3 className="text-2xl font-bold mb-2 text-gray-900">{plan.name}</h3>
                   <p className="text-gray-600 mb-4">{plan.employees}</p>
-                  <div className="text-4xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] bg-clip-text text-transparent">
                     {plan.discount}
                   </div>
                 </div>
@@ -265,7 +266,8 @@ export default function Corporate() {
                 <ul className="space-y-4 mb-8">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      {/* Checks de los planes actualizados a Granate Claro */}
+                      <div className="w-6 h-6 bg-gradient-to-br from-[#A13B55] to-[#7B1E3A] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Check className="w-4 h-4 text-white" />
                       </div>
                       <span className="text-gray-700">{feature}</span>
@@ -276,11 +278,10 @@ export default function Corporate() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`w-full py-4 rounded-xl font-bold transition-all ${
-                    plan.popular
-                      ? "bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white shadow-lg hover:shadow-2xl"
+                  className={`w-full py-4 rounded-xl font-bold transition-all cursor-pointer ${plan.popular
+                      ? "bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white shadow-lg hover:shadow-2xl"
                       : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   Contactar ventas
                 </motion.button>
@@ -290,7 +291,7 @@ export default function Corporate() {
         </div>
       </section>
 
-      {/* Contact Form Section */}
+      {/* Contact Form Section - Modificado focus y botones a la marca */}
       <section id="contact" className="py-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4">
           <motion.div
@@ -317,7 +318,7 @@ export default function Corporate() {
                   <input
                     type="text"
                     required
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
+                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7B1E3A] focus:border-[#7B1E3A] outline-none transition-all"
                     placeholder="Tu Empresa S.A.S"
                   />
                 </div>
@@ -325,7 +326,7 @@ export default function Corporate() {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Número de empleados
                   </label>
-                  <select className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all">
+                  <select className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7B1E3A] focus:border-[#7B1E3A] outline-none transition-all">
                     <option>1 - 50</option>
                     <option>51 - 200</option>
                     <option>200+</option>
@@ -341,7 +342,7 @@ export default function Corporate() {
                   <input
                     type="text"
                     required
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
+                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7B1E3A] focus:border-[#7B1E3A] outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -351,7 +352,7 @@ export default function Corporate() {
                   <input
                     type="email"
                     required
-                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
+                    className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7B1E3A] focus:border-[#7B1E3A] outline-none transition-all"
                   />
                 </div>
               </div>
@@ -363,7 +364,7 @@ export default function Corporate() {
                 <input
                   type="tel"
                   required
-                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
+                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7B1E3A] focus:border-[#7B1E3A] outline-none transition-all"
                 />
               </div>
 
@@ -373,7 +374,7 @@ export default function Corporate() {
                 </label>
                 <textarea
                   rows={4}
-                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all resize-none"
+                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7B1E3A] focus:border-[#7B1E3A] outline-none transition-all resize-none"
                   placeholder="Cuéntanos más sobre tus necesidades..."
                 />
               </div>
@@ -382,7 +383,7 @@ export default function Corporate() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full py-5 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white text-xl font-bold rounded-2xl hover:shadow-2xl transition-all"
+                className="w-full py-5 bg-gradient-to-r from-[#7B1E3A] to-[#A13B55] text-white text-xl font-bold rounded-2xl hover:shadow-2xl transition-all cursor-pointer"
               >
                 Enviar solicitud
               </motion.button>
@@ -391,5 +392,7 @@ export default function Corporate() {
         </div>
       </section>
     </div>
+    <Footer/>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-# Proyecto AlecTours - Backend & Frontend
+# Proyecto AlekTours - Backend & Frontend
 
 Sistema de gestión de reservas de viajes y hoteles desarrollado con **FastAPI** (Backend) y una interfaz moderna (Frontend).
 
@@ -8,7 +8,7 @@ Sistema de gestión de reservas de viajes y hoteles desarrollado con **FastAPI**
 
 ```mermaid
 graph TD
-    A[proyecto-be-fe-alectours] --> B[backend]
+    A[proyecto-be-fe-alektours] --> B[backend]
     A --> C[frontend]
     A --> D[docker-compose.yml]
     A --> E[.gitignore]
@@ -67,10 +67,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 # Email (SMTP)
 MAIL_USERNAME=tu_correo@example.com
 MAIL_PASSWORD=tu_contraseña_app
-MAIL_FROM=noreply@alectours.com
+MAIL_FROM=noreply@alektours.com
 MAIL_PORT=1025
 MAIL_SERVER=mailpit
-MAIL_FROM_NAME=AlecTours
+MAIL_FROM_NAME=AlekTours
 MAIL_STARTTLS=False
 MAIL_SSL_TLS=False
 ```
@@ -206,7 +206,7 @@ await send_reservation_confirmation(
 ---
 
 ```
-proyecto-be-fe-alectours/
+proyecto-be-fe-alektours/
 ├── backend/
 │   ├── app/
 │   │   ├── core/              # Configuración centralizada
@@ -297,4 +297,4 @@ docker compose exec backend alembic upgrade head
 ---
 
 **Último actualizado**: Junio 2026
-# proyectoalectoursDocker
+# proyectoalektoursDocker

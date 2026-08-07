@@ -1,0 +1,44 @@
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+class ReservaDetailRepository:
+
+    @staticmethod
+    def get_habitaciones(db: Session, reserva_id: int):
+        result = db.execute(text("""
+            SELECT rh.id_habitacion, rh.fecha_checkin, rh.fecha_checkout,
+                   rh.precio_acordado, h.numero_habitacion, h.precio_noche,
+                   h.estado, th.nombre_tipo, hot.nombre_hotel
+            FROM reserva_habitaciones rh
+            JOIN habitaciones h ON h.id_habitacion = rh.id_habitacion
+            JOIN tipo_habitacion th ON th.id_tipo_habitacion = h.id_tipo_habitacion
+            JOIN hoteles hot ON hot.id_hotel = h.id_hotel
+            WHERE rh.id_reserva = :id
+        """), {"id": reserva_id}).fetchall()
+        return [dict(r._mapping) for r in result]
+
+    @staticmethod
+    def get_servicios(db: Session, reserva_id: int):
+        result = db.execute(text("""
+            SELECT rs.id_servicio, rs.fecha_servicio, rs.numero_personas,
+                   rs.precio_acordado, s.nombre_servicio, s.descripcion,
+                   s.duracion_horas, cs.nombre_categoria
+            FROM reserva_servicios rs
+            JOIN servicios s ON s.id_servicio = rs.id_servicio
+            LEFT JOIN categoria_servicio cs ON cs.id_categoria = s.id_categoria
+            WHERE rs.id_reserva = :id
+        """), {"id": reserva_id}).fetchall()
+        return [dict(r._mapping) for r in result]
+
+    @staticmethod
+    def get_historial(db: Session, reserva_id: int):
+        result = db.execute(text("""
+            SELECT hr.id_historial, hr.estado_anterior, hr.estado_nuevo,
+                   hr.fecha_cambio, hr.comentarios,
+                   COALESCE(e.nombre || ' ' || e.apellido, 'Sistema') AS nombre_empleado
+            FROM historial_reservas hr
+            LEFT JOIN empleados e ON e.id_empleado = hr.id_empleado_responsable
+            WHERE hr.id_reserva = :id
+            ORDER BY hr.fecha_cambio ASC
+        """), {"id": reserva_id}).fetchall()
+        return [dict(r._mapping) for r in result]

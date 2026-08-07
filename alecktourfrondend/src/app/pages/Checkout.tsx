@@ -1,384 +1,362 @@
-import { useParams, useNavigate } from "react-router";
-import { useState } from "react";
-import Navbar from "../components/Navbar";
-import { packages } from "../data/packages";
-import { CreditCard, Lock, Users, Sparkles, Shield, CheckCircle2, Zap } from "lucide-react";
+import { Calendar, CheckCircle2, CreditCard, Lock, Shield, Sparkles, Users, Zap } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import { toast, Toaster } from "sonner";
+import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
+import { HotelResponse, hotelService } from "../services/hotel.service";
+import { MetodoPago, pagoService, reservaService } from "../services/reserva.service";
 
 export default function Checkout() {
-  const { id } = useParams();
+  const { id } = useParams(); // id_hotel
   const navigate = useNavigate();
-  const pkg = packages.find((p) => p.id === id);
-  const [people, setPeople] = useState(2);
-  const [paymentOption, setPaymentOption] = useState<"full" | "partial">("full");
-  const [cardData, setCardData] = useState({
-    number: "",
-    name: "",
-    expiry: "",
-    cvv: "",
-  });
+  const { usuario, isAuthenticated } = useAuth();
+
+  const [hotel, setHotel] = useState<HotelResponse | null>(null);
+  const [metodos, setMetodos] = useState<MetodoPago[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!pkg) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Paquete no encontrado</h1>
-        </div>
-      </div>
-    );
-  }
+  const [people, setPeople] = useState(2);
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
+  const [metodoPago, setMetodoPago] = useState<number>(1);
+  const [paymentOption, setPaymentOption] = useState<'full' | 'partial'>('full');
 
-  const totalPrice = pkg.price * people;
-  const paymentAmount = paymentOption === "full" ? totalPrice : totalPrice * 0.5;
+  // Precio base por persona por noche (simulado)
+  const precioPorPersona = 500000;
+  const nights = fechaInicio && fechaFin
+    ? Math.max(1, Math.ceil((new Date(fechaFin).getTime() - new Date(fechaInicio).getTime()) / (1000 * 60 * 60 * 24)))
+    : 1;
+  const totalPrice = precioPorPersona * people * nights;
+  const paymentAmount = paymentOption === 'full' ? totalPrice : totalPrice * 0.5;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isAuthenticated) { navigate('/login'); return; }
+    if (!id) return;
+
+    Promise.all([
+      hotelService.getById(parseInt(id)),
+      pagoService.getMetodos(),
+    ]).then(([h, m]) => {
+      setHotel(h);
+      setMetodos(m);
+      if (m.length > 0) setMetodoPago(m[0].id_metodo);
+    }).catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id, isAuthenticated]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
-    
-    toast.loading("Procesando pago...", { id: "payment" });
 
-    setTimeout(() => {
-      toast.success("¡Pago exitoso!", { id: "payment" });
+    if (!fechaInicio || !fechaFin) {
+      toast.error('Selecciona las fechas de tu estadía');
+      return;
+    }
+    if (new Date(fechaFin) <= new Date(fechaInicio)) {
+      toast.error('La fecha de salida debe ser después de la entrada');
+      return;
+    }
+    if (!usuario?.id_cliente) {
+      toast.error('No se encontró tu perfil de cliente. Contacta soporte.');
+      return;
+    }
+
+    setIsProcessing(true);
+    toast.loading('Creando reserva...', { id: 'checkout' });
+
+    try {
+      // 1. Crear reserva
+      const reserva = await reservaService.create({
+        id_cliente: usuario.id_cliente,
+        id_empleado: 1, // empleado por defecto
+        id_paquete: 1,  // paquete por defecto hasta conectar paquetes
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        numero_personas: people,
+        estado: 'pendiente',
+      });
+
+      toast.loading('Procesando pago...', { id: 'checkout' });
+
+      // 2. Crear pago
+      const referencia = `REF-${Date.now()}`;
+      await pagoService.create({
+        id_reserva: reserva.id_reserva,
+        id_metodo_pago: metodoPago,
+        monto: paymentAmount,
+        referencia,
+      });
+
+      toast.success('¡Reserva confirmada!', { id: 'checkout' });
+
       setTimeout(() => {
-        navigate("/confirmation", {
+        navigate('/confirmation', {
           state: {
-            package: pkg,
+            reserva,
+            hotel,
             people,
             totalPrice,
             paymentAmount,
             paymentOption,
+            referencia,
           },
         });
       }, 500);
-    }, 2000);
+
+    } catch (err: any) {
+      toast.error(err.message || 'Error al procesar la reserva', { id: 'checkout' });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
+  if (loading) return (
+    <div className="min-h-screen bg-background transition-colors duration-200">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+        <p className="text-muted-foreground text-sm mt-4 font-medium animate-pulse">Sincronizando pasarela de pagos...</p>
+      </div>
+    </div>
+  );
+
+  if (!hotel) return (
+    <div className="min-h-screen bg-background transition-colors duration-200">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+        <h1 className="text-2xl font-medium text-foreground">El complejo u hotel no se encuentra disponible</h1>
+        <button onClick={() => navigate(-1)} className="mt-4 text-primary font-medium hover:underline">← Regresar</button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       <Navbar />
       <Toaster position="top-center" richColors />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+        {/* Encabezado */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 shrink-0">
+              <Sparkles className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                Completa tu reserva
-              </h1>
-              <p className="text-gray-600">¡Estás a un paso de tu aventura!</p>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Completa tu reserva</h1>
+              <p className="text-muted-foreground text-sm">Estás a un paso de confirmar tu próxima estadía.</p>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Form */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Formulario */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Number of People */}
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100"
-              >
+
+              {/* Fechas de estadía */}
+              <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                className="bg-card rounded-xl border border-border p-6 shadow-xs">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
+                  <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
+                    <Calendar className="w-4 h-4 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-bold">Cantidad de viajeros</h2>
+                  <h2 className="text-lg font-medium text-foreground">Fechas de estadía</h2>
                 </div>
-                <div className="flex items-center justify-center gap-8 py-6">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    type="button"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Check-in</label>
+                    <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]} required
+                      className="w-full px-4 py-3 border border-border bg-input-background rounded-xl text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Check-out</label>
+                    <input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)}
+                      min={fechaInicio || new Date().toISOString().split('T')[0]} required
+                      className="w-full px-4 py-3 border border-border bg-input-background rounded-xl text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* Selector de Viajeros */}
+              <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="bg-card rounded-xl border border-border p-6 shadow-xs">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-9 h-9 bg-chart-5/10 rounded-lg flex items-center justify-center border border-chart-5/20">
+                    <Users className="w-4 h-4 text-chart-5" />
+                  </div>
+                  <h2 className="text-lg font-medium text-foreground">Cantidad de viajeros</h2>
+                </div>
+                <div className="flex items-center justify-center gap-8 py-2">
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="button"
                     onClick={() => setPeople(Math.max(1, people - 1))}
-                    className="w-14 h-14 rounded-full border-2 border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white text-[#FF6B35] text-2xl font-bold transition-all shadow-lg"
-                  >
+                    className="w-12 h-12 rounded-full border border-border bg-card text-foreground hover:bg-muted font-semibold text-lg transition-colors flex items-center justify-center shadow-xs">
                     -
                   </motion.button>
-                  <div className="text-center min-w-[120px]">
-                    <motion.span
-                      key={people}
-                      initial={{ scale: 1.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-6xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent"
-                    >
+                  <div className="text-center min-w-[100px]">
+                    <motion.span key={people} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      className="text-5xl font-bold tracking-tight text-foreground block">
                       {people}
                     </motion.span>
-                    <p className="text-gray-600 mt-2">
-                      {people === 1 ? "persona" : "personas"}
-                    </p>
+                    <p className="text-xs font-medium text-muted-foreground mt-1">{people === 1 ? 'viajero' : 'viajeros'}</p>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    type="button"
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="button"
                     onClick={() => setPeople(Math.min(8, people + 1))}
-                    className="w-14 h-14 rounded-full border-2 border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white text-[#FF6B35] text-2xl font-bold transition-all shadow-lg"
-                  >
+                    className="w-12 h-12 rounded-full border border-border bg-card text-foreground hover:bg-muted font-semibold text-lg transition-colors flex items-center justify-center shadow-xs">
                     +
                   </motion.button>
                 </div>
               </motion.section>
 
-              {/* Payment Option */}
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100"
-              >
+              {/* Pasarela/Métodos de pago */}
+              <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                className="bg-card rounded-xl border border-border p-6 shadow-xs">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-white" />
+                  <div className="w-9 h-9 bg-green-500/10 rounded-lg flex items-center justify-center border border-green-500/20">
+                    <CreditCard className="w-4 h-4 text-green-500" />
                   </div>
-                  <h2 className="text-2xl font-bold">Opciones de pago</h2>
+                  <h2 className="text-lg font-medium text-foreground">Método de pago</h2>
                 </div>
-                <div className="space-y-4">
-                  <motion.label
-                    whileHover={{ scale: 1.02 }}
-                    className={`flex items-start gap-4 p-6 rounded-2xl cursor-pointer border-2 transition-all ${
-                      paymentOption === "full"
-                        ? "border-[#FF6B35] bg-gradient-to-r from-orange-50 to-orange-100 shadow-lg"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentOption === "full"}
-                      onChange={() => setPaymentOption("full")}
-                      className="mt-1 w-5 h-5 text-[#FF6B35] focus:ring-[#FF6B35]"
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {metodos.map(m => (
+                    <motion.label key={m.id_metodo} whileHover={{ y: -1 }}
+                      className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${metodoPago === m.id_metodo
+                          ? 'border-primary bg-primary/5 shadow-xs'
+                          : 'border-border bg-card hover:border-border/80'
+                        }`}>
+                      <input type="radio" name="metodo" checked={metodoPago === m.id_metodo}
+                        onChange={() => setMetodoPago(m.id_metodo)}
+                        className="w-4 h-4 text-primary focus:ring-primary border-border bg-input-background" />
+                      <span className="text-sm font-medium text-foreground">{m.nombre_metodo}</span>
+                    </motion.label>
+                  ))}
+                </div>
+              </motion.section>
+
+              {/* Fraccionamiento de Pago */}
+              <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                className="bg-card rounded-xl border border-border p-6 shadow-xs">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-9 h-9 bg-chart-2/10 rounded-lg flex items-center justify-center border border-chart-2/20">
+                    <Zap className="w-4 h-4 text-chart-2" />
+                  </div>
+                  <h2 className="text-lg font-medium text-foreground">Opciones de financiamiento</h2>
+                </div>
+                <div className="space-y-3">
+                  <motion.label whileHover={{ y: -1 }}
+                    className={`flex items-start gap-4 p-5 rounded-xl cursor-pointer border transition-all ${paymentOption === 'full' ? 'border-primary bg-primary/5 shadow-xs' : 'border-border bg-card'
+                      }`}>
+                    <input type="radio" name="payment" checked={paymentOption === 'full'}
+                      onChange={() => setPaymentOption('full')}
+                      className="mt-1 w-4 h-4 text-primary focus:ring-primary border-border bg-input-background" />
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">Pago completo</span>
-                          <CheckCircle2 className="w-5 h-5 text-green-600" />
+                          <span className="font-semibold text-sm md:text-base text-foreground">Pago de contado</span>
+                          <CheckCircle2 className="w-4 h-4 text-green-500" />
                         </div>
-                        <span className="text-3xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent">
-                          ${totalPrice.toLocaleString("es-CO")}
+                        <span className="text-base md:text-lg font-bold text-foreground">
+                          ${totalPrice.toLocaleString('es-CO')}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600">
-                        Paga el 100% ahora y asegura tu viaje con descuento adicional
-                      </p>
+                      <p className="text-xs text-muted-foreground">Liquida el 100% del monto hoy y olvídate de cargos posteriores.</p>
                     </div>
                   </motion.label>
 
-                  <motion.label
-                    whileHover={{ scale: 1.02 }}
-                    className={`flex items-start gap-4 p-6 rounded-2xl cursor-pointer border-2 transition-all ${
-                      paymentOption === "partial"
-                        ? "border-[#FF6B35] bg-gradient-to-r from-orange-50 to-orange-100 shadow-lg"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentOption === "partial"}
-                      onChange={() => setPaymentOption("partial")}
-                      className="mt-1 w-5 h-5 text-[#FF6B35] focus:ring-[#FF6B35]"
-                    />
+                  <motion.label whileHover={{ y: -1 }}
+                    className={`flex items-start gap-4 p-5 rounded-xl cursor-pointer border transition-all ${paymentOption === 'partial' ? 'border-primary bg-primary/5 shadow-xs' : 'border-border bg-card'
+                      }`}>
+                    <input type="radio" name="payment" checked={paymentOption === 'partial'}
+                      onChange={() => setPaymentOption('partial')}
+                      className="mt-1 w-4 h-4 text-primary focus:ring-primary border-border bg-input-background" />
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">Pago parcial (50%)</span>
-                          <Sparkles className="w-5 h-5 text-[#F7931E]" />
+                          <span className="font-semibold text-sm md:text-base text-foreground">Pago diferido (50% anticipo)</span>
+                          <Sparkles className="w-4 h-4 text-chart-2" />
                         </div>
-                        <span className="text-3xl font-bold text-[#F7931E]">
-                          ${(totalPrice * 0.5).toLocaleString("es-CO")}
+                        <span className="text-base md:text-lg font-bold text-primary">
+                          ${(totalPrice * 0.5).toLocaleString('es-CO')}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600">
-                        Paga 50% ahora, resto 15 días antes del viaje
-                      </p>
+                      <p className="text-xs text-muted-foreground">Asegura tu cupo con la mitad y cubre el saldo restante 15 días antes de tu viaje.</p>
                     </div>
                   </motion.label>
                 </div>
               </motion.section>
 
-              {/* Card Details */}
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100"
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold">Información de pago</h2>
-                </div>
+              {/* Badge SSL */}
+              <div className="flex items-center gap-3 p-4 bg-green-500/5 rounded-xl border border-green-500/10 transition-colors">
+                <Shield className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span className="text-xs text-muted-foreground font-medium">Transacción protegida mediante encriptación SSL de 256 bits</span>
+              </div>
 
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Número de tarjeta
-                    </label>
-                    <input
-                      type="text"
-                      value={cardData.number}
-                      onChange={(e) =>
-                        setCardData({ ...cardData, number: e.target.value })
-                      }
-                      placeholder="1234 5678 9012 3456"
-                      maxLength={19}
-                      required
-                      className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nombre en la tarjeta
-                    </label>
-                    <input
-                      type="text"
-                      value={cardData.name}
-                      onChange={(e) =>
-                        setCardData({ ...cardData, name: e.target.value })
-                      }
-                      placeholder="JUAN PEREZ"
-                      required
-                      className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Vencimiento
-                      </label>
-                      <input
-                        type="text"
-                        value={cardData.expiry}
-                        onChange={(e) =>
-                          setCardData({ ...cardData, expiry: e.target.value })
-                        }
-                        placeholder="MM/AA"
-                        maxLength={5}
-                        required
-                        className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        CVV
-                      </label>
-                      <input
-                        type="text"
-                        value={cardData.cvv}
-                        onChange={(e) =>
-                          setCardData({ ...cardData, cvv: e.target.value })
-                        }
-                        placeholder="123"
-                        maxLength={3}
-                        required
-                        className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-700 font-medium">
-                    Pago 100% seguro con encriptación SSL
-                  </span>
-                </div>
-              </motion.section>
-
-              {/* Submit Button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={isProcessing}
-                className="w-full py-5 bg-gradient-to-r from-[#FF6B35] via-[#FF8E53] to-[#F7931E] text-white text-xl font-bold rounded-2xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-white/20"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "100%" }}
-                  transition={{ duration: 0.6 }}
-                />
-                <span className="relative flex items-center justify-center gap-3">
-                  {isProcessing ? (
-                    "Procesando..."
-                  ) : (
-                    <>
-                      <Lock className="w-6 h-6" />
-                      Confirmar y pagar ${paymentAmount.toLocaleString("es-CO")}
-                    </>
+              {/* Botón de Confirmación final */}
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                type="submit" disabled={isProcessing}
+                className="w-full py-4 bg-primary text-primary-foreground text-base font-semibold rounded-xl border border-transparent shadow-md hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden">
+                <motion.div className="absolute inset-0 bg-white/10" initial={{ x: '-100%' }}
+                  whileHover={{ x: '100%' }} transition={{ duration: 0.5 }} />
+                <span className="relative flex items-center justify-center gap-2.5">
+                  {isProcessing ? 'Garantizando transacciones...' : (
+                    <><Lock className="w-4 h-4" />Confirmar y autorizar ${paymentAmount.toLocaleString('es-CO')}</>
                   )}
                 </span>
               </motion.button>
             </form>
           </div>
 
-          {/* Summary Sidebar */}
+          {/* Sidebar Resumen Desglose */}
           <div className="lg:col-span-1">
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-3xl shadow-xl p-6 sticky top-24 border border-gray-100"
-            >
-              <h2 className="text-2xl font-bold mb-6">Resumen</h2>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+              className="bg-card rounded-xl border border-border p-6 sticky top-24 shadow-xs">
+              <h2 className="text-lg font-medium text-foreground mb-4">Resumen de itinerario</h2>
 
-              <div className="mb-6">
-                <motion.img
-                  whileHover={{ scale: 1.05 }}
-                  src={pkg.image}
-                  alt={pkg.destination}
-                  className="w-full h-48 object-cover rounded-2xl mb-4 shadow-md"
-                />
-                <h3 className="text-xl font-bold text-gray-900">{pkg.destination}</h3>
-                <p className="text-gray-600">{pkg.duration}</p>
-              </div>
-
-              <div className="space-y-4 pb-6 border-b border-gray-200">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Precio por persona</span>
-                  <span className="font-semibold">
-                    ${pkg.price.toLocaleString("es-CO")}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Cantidad</span>
-                  <span className="font-semibold">{people} {people === 1 ? "persona" : "personas"}</span>
-                </div>
-                <div className="flex justify-between text-lg pt-2">
-                  <span className="font-bold">Total</span>
-                  <span className="text-2xl font-bold text-gray-900">
-                    ${totalPrice.toLocaleString("es-CO")}
-                  </span>
+              {/* Mini card del hotel seleccionado */}
+              <div className="mb-6 p-4 bg-muted/60 border border-border rounded-xl">
+                <p className="font-bold text-foreground text-base leading-tight">{hotel.nombre_hotel}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{hotel.ciudad}, {hotel.pais}</p>
+                <div className="flex gap-0.5 mt-2">
+                  {Array.from({ length: hotel.calificacion || 5 }, (_, i) => (
+                    <span key={i} className="text-chart-2 text-xs">★</span>
+                  ))}
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold text-gray-900">A pagar ahora</span>
-                  <span className="text-3xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent">
-                    ${paymentAmount.toLocaleString("es-CO")}
+              {/* Desglose matemático */}
+              <div className="space-y-3 pb-4 border-b border-border text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tarifa base por noche</span>
+                  <span className="font-medium text-foreground">${precioPorPersona.toLocaleString('es-CO')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pasajeros inscritos</span>
+                  <span className="font-medium text-foreground">{people}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Noches de hospedaje</span>
+                  <span className="font-medium text-foreground">{nights}</span>
+                </div>
+                <div className="flex justify-between text-sm md:text-base pt-2 border-t border-dashed border-border mt-2">
+                  <span className="font-semibold text-foreground">Total bruto</span>
+                  <span className="font-bold text-foreground">${totalPrice.toLocaleString('es-CO')}</span>
+                </div>
+              </div>
+
+              {/* Total final a pagar ahora */}
+              <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-semibold text-xs md:text-sm text-foreground">Cargos actuales</span>
+                  <span className="text-xl md:text-2xl font-bold text-primary tracking-tight">
+                    ${paymentAmount.toLocaleString('es-CO')}
                   </span>
                 </div>
-                {paymentOption === "partial" && (
-                  <p className="text-xs text-gray-600 mt-2">
-                    Pagarás ${(totalPrice * 0.5).toLocaleString("es-CO")} restantes antes del viaje
+                {paymentOption === 'partial' && (
+                  <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                    Un saldo de ${(totalPrice * 0.5).toLocaleString('es-CO')} quedará pendiente en tu panel para liquidarse previo al arribo.
                   </p>
                 )}
               </div>
