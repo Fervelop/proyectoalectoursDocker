@@ -43,6 +43,32 @@ class MetodoPagoResponse(BaseModel):
         from_attributes = True
 
 
+# ===================== NUEVO: Habitación dentro de una reserva =====================
+
+class HabitacionReservaCreate(BaseModel):
+    """Una habitación específica que el cliente quiere reservar dentro de la reserva."""
+    id_habitacion: int
+    fecha_checkin: date
+    fecha_checkout: date
+
+    @field_validator("fecha_checkout")
+    @classmethod
+    def validate_fechas_habitacion(cls, v, info):
+        if "fecha_checkin" in info.data and v <= info.data["fecha_checkin"]:
+            raise ValueError("fecha_checkout debe ser posterior a fecha_checkin")
+        return v
+
+
+class HabitacionReservaResponse(BaseModel):
+    id_habitacion: int
+    fecha_checkin: date
+    fecha_checkout: date
+    precio_acordado: Optional[float] = None
+
+    class Config:
+        from_attributes = True
+
+
 class ReservaCreate(BaseModel):
     id_cliente: int
     id_empleado: Optional[int] = None
@@ -50,6 +76,8 @@ class ReservaCreate(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     numero_personas: int = Field(..., gt=0)
+    # NUEVO: habitaciones reales que se están reservando (precio se calcula en backend, no se confía en el frontend)
+    habitaciones: Optional[List[HabitacionReservaCreate]] = None
 
     @field_validator("fecha_fin")
     @classmethod
@@ -126,3 +154,9 @@ class PagoResponse(BaseModel):
 class ReservaDetailResponse(ReservaResponse):
     paquete: Optional[PaqueteResponse] = None
     pagos: List[PagoResponse] = []
+    # OJO: el modelo SQLAlchemy llama a esta relación "reserva_habitaciones", por eso el alias.
+    habitaciones: List[HabitacionReservaResponse] = Field(default=[], validation_alias="reserva_habitaciones")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
