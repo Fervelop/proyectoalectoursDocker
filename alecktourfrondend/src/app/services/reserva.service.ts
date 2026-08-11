@@ -1,5 +1,5 @@
 import { apiFetch } from '../api/v1/api';
-import { ReservaResponse, ReservaCreate } from '../data/reservaTypes';
+import { ReservaCreate, ReservaResponse } from '../data/reservaTypes';
 
 export interface MetodoPago {
   id_metodo: number;
@@ -67,12 +67,12 @@ export const reservaService = {
   delete: (id: number) =>
     apiFetch<{ message: string }>(`/reservas/${id}`, { method: 'DELETE' }),
 
-  
+
   updateEstado: (id: number, estado: string) =>
-  apiFetch<ReservaResponse>(`/reservas/${id}`, {
-    method: 'PUT',
-    body: { estado },   // ReservaUpdate tiene exclude_unset=True, así que solo manda esto
-  }),
+    apiFetch<ReservaResponse>(`/reservas/${id}`, {
+      method: 'PUT',
+      body: { estado },   // ReservaUpdate tiene exclude_unset=True, así que solo manda esto
+    }),
 };
 
 
@@ -92,5 +92,3 @@ export const reservaDetailService = {
   getHistorial: (id: number) =>
     apiFetch<any[]>(`/reservas/${id}/historial`),
 };
-
-

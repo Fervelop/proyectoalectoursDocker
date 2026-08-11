@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.core.database import get_db
-from app.core.exceptions import ReservaDependencyError, PaqueteDependencyError, NotFoundError
+from app.core.exceptions import (
+    ReservaDependencyError, PaqueteDependencyError, NotFoundError,
+    HabitacionNoDisponibleError, HabitacionNoEncontradaError, PaqueteNoEncontradoError,
+)
 from app.schemas.reserva_schema import (
     PaqueteCreate, PaqueteUpdate, PaqueteResponse,
     ReservaCreate, ReservaUpdate, ReservaResponse, ReservaDetailResponse,
@@ -133,7 +136,7 @@ def get_historial_reserva(reserva_id: int, db: Session = Depends(get_db)):
 
 @router.get("/reservas/{reserva_id}", response_model=ReservaDetailResponse)
 def get_reserva(reserva_id: int, db: Session = Depends(get_db)):
-    """Obtiene detalles completos de una reserva con paquete y pagos"""
+    """Obtiene detalles completos de una reserva con paquete, pagos y habitaciones"""
     reserva = ReservaRepository.get_by_id(db, reserva_id)
     if not reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
@@ -142,8 +145,26 @@ def get_reserva(reserva_id: int, db: Session = Depends(get_db)):
 
 @router.post("/reservas", response_model=ReservaResponse, status_code=201)
 def create_reserva(reserva: ReservaCreate, db: Session = Depends(get_db)):
-    """Crea una nueva reserva"""
-    return ReservaRepository.create(db, reserva.dict())
+    """
+    Crea una nueva reserva.
+
+    Si `habitaciones` viene incluido, el backend:
+    - Verifica que cada habitación exista y no esté en mantenimiento
+    - Verifica que no haya otra reserva activa cruzando esas fechas (409 si la hay)
+    - Calcula el precio con el valor REAL de la habitación en la BD (ignora cualquier
+      precio que mande el frontend, para evitar manipulación)
+    """
+    try:
+        return ReservaRepository.create(db, reserva.dict())
+    except HabitacionNoDisponibleError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except HabitacionNoEncontradaError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except PaqueteNoEncontradoError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/reservas/{reserva_id}", response_model=ReservaResponse)
