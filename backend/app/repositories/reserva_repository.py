@@ -1,7 +1,11 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_
 from app.models.reserva_model import Reserva, Paquete, Pago, MetodoPago, HistorialReserva, ReservaHabitacion, ReservaServicio
-from app.core.exceptions import ReservaDependencyError, PaqueteDependencyError, NotFoundError
+from app.models.hotel_model import Habitacion
+from app.core.exceptions import (
+    ReservaDependencyError, PaqueteDependencyError, NotFoundError,
+    HabitacionNoDisponibleError, HabitacionNoEncontradaError, PaqueteNoEncontradoError,
+)
 
 
 class PaqueteRepository:
@@ -70,11 +74,76 @@ class ReservaRepository:
     @staticmethod
     def get_by_estado(db: Session, estado: str, skip: int = 0, limit: int = 10):
         return db.query(Reserva).filter(Reserva.estado == estado).offset(skip).limit(limit).all()
-    
+
+    @staticmethod
+    def _verificar_disponibilidad(db: Session, id_habitacion: int, fecha_checkin, fecha_checkout):
+        """
+        Revisa que la habitación exista, esté operativa, y que no tenga
+        otra reserva activa que se cruce con el rango de fechas solicitado.
+        """
+        habitacion = db.query(Habitacion).filter(Habitacion.id_habitacion == id_habitacion).first()
+        if not habitacion:
+            raise HabitacionNoEncontradaError(id_habitacion)
+
+        if habitacion.estado == "mantenimiento":
+            raise HabitacionNoDisponibleError(id_habitacion, fecha_checkin, fecha_checkout)
+
+        # Cruce de fechas: dos rangos se solapan si (inicio1 < fin2) y (inicio2 < fin1)
+        cruce = (
+            db.query(ReservaHabitacion)
+            .join(Reserva, Reserva.id_reserva == ReservaHabitacion.id_reserva)
+            .filter(
+                ReservaHabitacion.id_habitacion == id_habitacion,
+                Reserva.estado.in_(["pendiente", "confirmada"]),  # reservas activas
+                and_(
+                    ReservaHabitacion.fecha_checkin < fecha_checkout,
+                    ReservaHabitacion.fecha_checkout > fecha_checkin,
+                ),
+            )
+            .first()
+        )
+        if cruce:
+            raise HabitacionNoDisponibleError(id_habitacion, fecha_checkin, fecha_checkout)
+
+        return habitacion
+
     @staticmethod
     def create(db: Session, reserva_data: dict):
+        """
+        Crea una reserva. Si viene con `habitaciones`, valida disponibilidad real
+        de cada una y guarda el precio real de la BD (nunca el que mande el frontend).
+        """
+        habitaciones_solicitadas = reserva_data.pop("habitaciones", None) or []
+
+        # Si mandan id_paquete, verificar que exista de verdad
+        id_paquete = reserva_data.get("id_paquete")
+        if id_paquete is not None:
+            paquete = db.query(Paquete).filter(Paquete.id_paquete == id_paquete).first()
+            if not paquete:
+                raise PaqueteNoEncontradoError(id_paquete)
+
+        # Validar TODAS las habitaciones antes de crear nada (evita reservas a medias)
+        habitaciones_validadas = []
+        for h in habitaciones_solicitadas:
+            habitacion = ReservaRepository._verificar_disponibilidad(
+                db, h["id_habitacion"], h["fecha_checkin"], h["fecha_checkout"]
+            )
+            habitaciones_validadas.append((h, habitacion))
+
         reserva = Reserva(**reserva_data, estado="pendiente")
         db.add(reserva)
+        db.flush()  # asigna id_reserva sin cerrar la transacción
+
+        for h, habitacion in habitaciones_validadas:
+            reserva_habitacion = ReservaHabitacion(
+                id_reserva=reserva.id_reserva,
+                id_habitacion=habitacion.id_habitacion,
+                fecha_checkin=h["fecha_checkin"],
+                fecha_checkout=h["fecha_checkout"],
+                precio_acordado=habitacion.precio_noche,  # precio real de la BD, no el del frontend
+            )
+            db.add(reserva_habitacion)
+
         db.commit()
         db.refresh(reserva)
         return reserva

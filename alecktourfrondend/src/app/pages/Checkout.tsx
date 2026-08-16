@@ -1,19 +1,22 @@
-import { Calendar, CheckCircle2, CreditCard, Lock, Shield, Sparkles, Users, Zap } from "lucide-react";
+import { Bed, Calendar, CheckCircle2, CreditCard, Lock, Shield, Sparkles, Users, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { toast, Toaster } from "sonner";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
-import { HotelResponse, hotelService } from "../services/hotel.service";
+import { HabitacionResponse, HotelResponse, hotelService } from "../services/hotel.service";
 import { MetodoPago, pagoService, reservaService } from "../services/reserva.service";
 
 export default function Checkout() {
   const { id } = useParams(); // id_hotel
+  const [searchParams] = useSearchParams();
+  const idHabitacion = searchParams.get("habitacion");
   const navigate = useNavigate();
   const { usuario, isAuthenticated } = useAuth();
 
   const [hotel, setHotel] = useState<HotelResponse | null>(null);
+  const [habitacion, setHabitacion] = useState<HabitacionResponse | null>(null);
   const [metodos, setMetodos] = useState<MetodoPago[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,12 +27,12 @@ export default function Checkout() {
   const [metodoPago, setMetodoPago] = useState<number>(1);
   const [paymentOption, setPaymentOption] = useState<'full' | 'partial'>('full');
 
-  // Precio base por persona por noche (simulado)
-  const precioPorPersona = 500000;
+  // Precio real de la habitación elegida (viene de la BD, no inventado)
+  const precioPorNoche = habitacion?.precio_noche ?? 0;
   const nights = fechaInicio && fechaFin
     ? Math.max(1, Math.ceil((new Date(fechaFin).getTime() - new Date(fechaInicio).getTime()) / (1000 * 60 * 60 * 24)))
     : 1;
-  const totalPrice = precioPorPersona * people * nights;
+  const totalPrice = precioPorNoche * nights;
   const paymentAmount = paymentOption === 'full' ? totalPrice : totalPrice * 0.5;
 
   useEffect(() => {
@@ -37,15 +40,31 @@ export default function Checkout() {
     if (!id) return;
 
     Promise.all([
-      hotelService.getById(parseInt(id)),
+      hotelService.getById(parseInt(id)), // trae hotel + sus habitaciones reales
       pagoService.getMetodos(),
     ]).then(([h, m]) => {
       setHotel(h);
       setMetodos(m);
       if (m.length > 0) setMetodoPago(m[0].id_metodo);
+
+      // Buscamos la habitación exacta que el usuario eligió en HotelDetail
+      const hab = (h as any).habitaciones?.find(
+        (hb: HabitacionResponse) => hb.id_habitacion === Number(idHabitacion)
+      );
+      if (!hab) {
+        toast.error('No se encontró la habitación seleccionada. Vuelve a elegirla.');
+        navigate(`/hotel/${id}`);
+        return;
+      }
+      if (hab.estado !== 'disponible') {
+        toast.error('Esa habitación ya no está disponible.');
+        navigate(`/hotel/${id}`);
+        return;
+      }
+      setHabitacion(hab);
     }).catch(console.error)
       .finally(() => setLoading(false));
-  }, [id, isAuthenticated]);
+  }, [id, idHabitacion, isAuthenticated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,20 +81,30 @@ export default function Checkout() {
       toast.error('No se encontró tu perfil de cliente. Contacta soporte.');
       return;
     }
+    if (!habitacion) {
+      toast.error('No hay una habitación válida seleccionada.');
+      return;
+    }
 
     setIsProcessing(true);
-    toast.loading('Creando reserva...', { id: 'checkout' });
+    toast.loading('Verificando disponibilidad y creando reserva...', { id: 'checkout' });
 
     try {
-      // 1. Crear reserva
+      // 1. Crear reserva con la habitación real.
+      //    El precio NO se manda: el backend lo calcula con precio_noche de la BD
+      //    y valida que la habitación siga disponible en esas fechas (409 si no).
       const reserva = await reservaService.create({
         id_cliente: usuario.id_cliente,
-        id_empleado: 1, // empleado por defecto
-        id_paquete: 1,  // paquete por defecto hasta conectar paquetes
         fecha_inicio: fechaInicio,
         fecha_fin: fechaFin,
         numero_personas: people,
-        estado: 'pendiente',
+        habitaciones: [
+          {
+            id_habitacion: habitacion.id_habitacion,
+            fecha_checkin: fechaInicio,
+            fecha_checkout: fechaFin,
+          },
+        ],
       });
 
       toast.loading('Procesando pago...', { id: 'checkout' });
@@ -96,6 +125,7 @@ export default function Checkout() {
           state: {
             reserva,
             hotel,
+            habitacion,
             people,
             totalPrice,
             paymentAmount,
@@ -106,6 +136,7 @@ export default function Checkout() {
       }, 500);
 
     } catch (err: any) {
+      // El backend devuelve 409 con mensaje claro si alguien más reservó la habitación primero
       toast.error(err.message || 'Error al procesar la reserva', { id: 'checkout' });
     } finally {
       setIsProcessing(false);
@@ -122,11 +153,11 @@ export default function Checkout() {
     </div>
   );
 
-  if (!hotel) return (
+  if (!hotel || !habitacion) return (
     <div className="min-h-screen bg-background transition-colors duration-200">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-medium text-foreground">El complejo u hotel no se encuentra disponible</h1>
+        <h1 className="text-2xl font-medium text-foreground">El complejo, hotel o habitación no se encuentra disponible</h1>
         <button onClick={() => navigate(-1)} className="mt-4 text-primary font-medium hover:underline">← Regresar</button>
       </div>
     </div>
@@ -163,51 +194,33 @@ export default function Checkout() {
                   <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
                     <Calendar className="w-4 h-4 text-primary" />
                   </div>
-                  <h2 className="text-lg font-medium text-foreground">Fechas de estadía</h2>
+                  <h2 className="text-lg font-medium text-foreground">Fechas y huéspedes</h2>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Check-in</label>
-                    <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]} required
-                      className="w-full px-4 py-3 border border-border bg-input-background rounded-xl text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Check-in</label>
+                    <input type="date" required value={fechaInicio}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setFechaInicio(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-input-background text-foreground text-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Check-out</label>
-                    <input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)}
-                      min={fechaInicio || new Date().toISOString().split('T')[0]} required
-                      className="w-full px-4 py-3 border border-border bg-input-background rounded-xl text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Check-out</label>
+                    <input type="date" required value={fechaFin}
+                      min={fechaInicio || new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setFechaFin(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-input-background text-foreground text-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" />
                   </div>
-                </div>
-              </motion.section>
-
-              {/* Selector de Viajeros */}
-              <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                className="bg-card rounded-xl border border-border p-6 shadow-xs">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-9 h-9 bg-chart-5/10 rounded-lg flex items-center justify-center border border-chart-5/20">
-                    <Users className="w-4 h-4 text-chart-5" />
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Huéspedes</label>
+                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-input-background">
+                      <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <input type="number" min={1} max={habitacion.tipo_habitacion?.capacidad_personas ?? 10}
+                        value={people}
+                        onChange={(e) => setPeople(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-full bg-transparent text-foreground text-sm focus:outline-none" />
+                    </div>
                   </div>
-                  <h2 className="text-lg font-medium text-foreground">Cantidad de viajeros</h2>
-                </div>
-                <div className="flex items-center justify-center gap-8 py-2">
-                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="button"
-                    onClick={() => setPeople(Math.max(1, people - 1))}
-                    className="w-12 h-12 rounded-full border border-border bg-card text-foreground hover:bg-muted font-semibold text-lg transition-colors flex items-center justify-center shadow-xs">
-                    -
-                  </motion.button>
-                  <div className="text-center min-w-[100px]">
-                    <motion.span key={people} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                      className="text-5xl font-bold tracking-tight text-foreground block">
-                      {people}
-                    </motion.span>
-                    <p className="text-xs font-medium text-muted-foreground mt-1">{people === 1 ? 'viajero' : 'viajeros'}</p>
-                  </div>
-                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="button"
-                    onClick={() => setPeople(Math.min(8, people + 1))}
-                    className="w-12 h-12 rounded-full border border-border bg-card text-foreground hover:bg-muted font-semibold text-lg transition-colors flex items-center justify-center shadow-xs">
-                    +
-                  </motion.button>
                 </div>
               </motion.section>
 
@@ -224,8 +237,8 @@ export default function Checkout() {
                   {metodos.map(m => (
                     <motion.label key={m.id_metodo} whileHover={{ y: -1 }}
                       className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${metodoPago === m.id_metodo
-                          ? 'border-primary bg-primary/5 shadow-xs'
-                          : 'border-border bg-card hover:border-border/80'
+                        ? 'border-primary bg-primary/5 shadow-xs'
+                        : 'border-border bg-card hover:border-border/80'
                         }`}>
                       <input type="radio" name="metodo" checked={metodoPago === m.id_metodo}
                         onChange={() => setMetodoPago(m.id_metodo)}
@@ -315,10 +328,14 @@ export default function Checkout() {
               className="bg-card rounded-xl border border-border p-6 sticky top-24 shadow-xs">
               <h2 className="text-lg font-medium text-foreground mb-4">Resumen de itinerario</h2>
 
-              {/* Mini card del hotel seleccionado */}
+              {/* Mini card del hotel + habitación seleccionada */}
               <div className="mb-6 p-4 bg-muted/60 border border-border rounded-xl">
                 <p className="font-bold text-foreground text-base leading-tight">{hotel.nombre_hotel}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{hotel.ciudad}, {hotel.pais}</p>
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-primary font-medium">
+                  <Bed className="w-3.5 h-3.5" />
+                  {habitacion.tipo_habitacion?.nombre_tipo ?? "Habitación"} · #{habitacion.numero_habitacion}
+                </div>
                 <div className="flex gap-0.5 mt-2">
                   {Array.from({ length: hotel.calificacion || 5 }, (_, i) => (
                     <span key={i} className="text-chart-2 text-xs">★</span>
@@ -326,11 +343,11 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* Desglose matemático */}
+              {/* Desglose matemático — con precio REAL de la habitación */}
               <div className="space-y-3 pb-4 border-b border-border text-xs md:text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tarifa base por noche</span>
-                  <span className="font-medium text-foreground">${precioPorPersona.toLocaleString('es-CO')}</span>
+                  <span className="text-muted-foreground">Tarifa por noche</span>
+                  <span className="font-medium text-foreground">${precioPorNoche.toLocaleString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Pasajeros inscritos</span>
