@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey, CheckConstraint, UniqueConstraint, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -60,7 +60,7 @@ class Habitacion(Base):
     id_hotel = Column(Integer, ForeignKey("hoteles.id_hotel", ondelete="CASCADE"), nullable=False)
     id_tipo_habitacion = Column(Integer, ForeignKey("tipo_habitacion.id_tipo_habitacion"), nullable=False)
     numero_habitacion = Column(String(20), nullable=False)
-    precio_noche = Column(Integer, CheckConstraint("precio_noche >= 0"), nullable=False)
+    precio_noche = Column(Numeric(10, 2), CheckConstraint("precio_noche >= 0"), nullable=False)
     estado = Column(String(20), CheckConstraint("estado IN ('disponible', 'ocupada', 'mantenimiento')"), nullable=False)
 
     hotel = relationship("Hotel", back_populates="habitaciones")
