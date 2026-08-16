@@ -22,17 +22,23 @@ from app.repositories.reserva_repository import PaqueteRepository, ReservaReposi
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
+
+# SQLite no soporta el tipo ARRAY de Postgres (usado en preferencias_cliente.intereses).
+# Esa tabla no la necesitan estos tests, así que la excluimos al crear el esquema.
+TABLES_FOR_TESTS = [
+    t for name, t in Base.metadata.tables.items() if name != "preferencias_cliente"
+]
+Base.metadata.create_all(bind=engine, tables=TABLES_FOR_TESTS)
 
 
 @pytest.fixture
 def db():
     """Create a fresh database for each test"""
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine, tables=TABLES_FOR_TESTS)
     session = TestingSessionLocal()
     yield session
     session.close()
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=engine, tables=TABLES_FOR_TESTS)
 
 
 class TestHotelDeletionExceptions:
