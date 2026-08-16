@@ -4,9 +4,8 @@ Test suite for DELETE exception handling with foreign key constraints
 import pytest
 from datetime import date
 import sqlalchemy as sa
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, ARRAY
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.postgresql import ARRAY
 from app.core.database import Base
 from app.core.exceptions import (
     HotelDependencyError, ClienteDependencyError, EmpleadoDependencyError,
@@ -25,9 +24,9 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# SQLite no soporta el tipo ARRAY de Postgres. Lo usa preferencias_cliente.intereses.
-# Para que la tabla sí se cree (y las relaciones lazy-load no fallen), la
-# reemplazamos por JSON solo para este motor de pruebas en memoria.
+# SQLite no soporta ARRAY. Se usa en preferencias_cliente.intereses (ARRAY(String)
+# genérico de sqlalchemy, no el de postgresql.dialects). Lo cambiamos a JSON
+# solo para este motor de pruebas en memoria.
 for table in Base.metadata.tables.values():
     for column in table.columns:
         if isinstance(column.type, ARRAY):
