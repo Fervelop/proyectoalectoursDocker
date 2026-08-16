@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, Date, TIMESTAMP, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, Boolean, Text, Date, TIMESTAMP, ForeignKey, CheckConstraint, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -12,7 +12,7 @@ class Paquete(Base):
     nombre_paquete = Column(String(100), nullable=False)
     descripcion = Column(Text)
     duracion_dias = Column(Integer)
-    precio_base = Column(Integer, CheckConstraint("precio_base >= 0"), nullable=False)
+    precio_base = Column(Numeric(10, 2), CheckConstraint("precio_base >= 0"), nullable=False)
     activo = Column(Boolean, default=True)
 
     paquete_servicios = relationship("PaqueteServicio", back_populates="paquete", cascade="all, delete-orphan")
@@ -59,6 +59,11 @@ class Reserva(Base):
         CheckConstraint("estado IN ('pendiente', 'confirmada', 'cancelada', 'finalizada')"),
         nullable=False
     )
+    canal_origen = Column(
+        String(20),
+        CheckConstraint("canal_origen IN ('web', 'empleado', 'telefono')"),
+        default='web'
+    )
 
     cliente = relationship("Cliente", back_populates="reservas")
     empleado = relationship("Empleado", back_populates="reservas")
@@ -76,7 +81,7 @@ class ReservaHabitacion(Base):
     id_habitacion = Column(Integer, ForeignKey("habitaciones.id_habitacion"), primary_key=True)
     fecha_checkin = Column(Date)
     fecha_checkout = Column(Date)
-    precio_acordado = Column(Integer)
+    precio_acordado = Column(Numeric(10, 2))
 
     reserva = relationship("Reserva", back_populates="reserva_habitaciones")
     habitacion = relationship("Habitacion", back_populates="reserva_habitaciones")
@@ -89,7 +94,7 @@ class ReservaServicio(Base):
     id_servicio = Column(Integer, ForeignKey("servicios.id_servicio"), primary_key=True)
     fecha_servicio = Column(Date)
     numero_personas = Column(Integer)
-    precio_acordado = Column(Integer)
+    precio_acordado = Column(Numeric(10, 2))
 
     reserva = relationship("Reserva", back_populates="reserva_servicios")
     servicio = relationship("Servicio", back_populates="reserva_servicios")
@@ -110,7 +115,7 @@ class Pago(Base):
     id_pago = Column(Integer, primary_key=True, index=True)
     id_reserva = Column(Integer, ForeignKey("reservas.id_reserva"), nullable=False)
     id_metodo_pago = Column(Integer, ForeignKey("metodos_pago.id_metodo"), nullable=False)
-    monto = Column(Integer, CheckConstraint("monto >= 0"), nullable=False)
+    monto = Column(Numeric(10, 2), CheckConstraint("monto >= 0"), nullable=False)
     fecha_pago = Column(TIMESTAMP, server_default=func.now())
     referencia = Column(String(100))
     estado = Column(
