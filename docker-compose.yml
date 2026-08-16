@@ -15,7 +15,6 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
 
     networks:
       - alecktours_network
@@ -56,6 +55,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: dev
 
     container_name: fastapi_backend
     restart: always

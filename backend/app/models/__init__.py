@@ -1,6 +1,6 @@
 # Importar todos los modelos aquí para asegurar que SQLAlchemy los registre
 from app.models.user_model import Usuario
-from app.models.cliente_model import Cliente, Empleado
+from app.models.cliente_model import Cliente, Empleado, PreferenciaCliente
 from app.models.auth_model import Rol, UsuarioRol, SesionUsuario, RecuperacionPassword
 from app.models.hotel_model import Hotel, Habitacion, Caracteristica, HotelCaracteristica, TipoHabitacion
 from app.models.servicio_model import Servicio, Destino, CategoriaServicio, Proveedor, ServicioProveedor
@@ -13,6 +13,7 @@ __all__ = [
     "Usuario",
     "Cliente",
     "Empleado",
+    "PreferenciaCliente",
     "Hotel",
     "Habitacion",
     "Caracteristica",
@@ -32,7 +33,7 @@ __all__ = [
     "ReservaServicio",
     "PaqueteServicio",
     "PaqueteHotel",
-       "Rol",
+    "Rol",
     "UsuarioRol",
     "SesionUsuario",
     "RecuperacionPassword",
