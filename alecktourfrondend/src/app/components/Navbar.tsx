@@ -1,12 +1,26 @@
+import {
+  Building2,
+  Car,
+  ChevronDown,
+  Gift,
+  LogIn,
+  LogOut,
+  Menu,
+  Package,
+  Phone,
+  Plane,
+  Ship,
+  User,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { Building2, ChevronDown, Gift, LogIn, LogOut, Menu, Plane, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { ClienteResponse, clienteService } from "../services/cliente.service";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import { ThemeToggle } from "./ThemeToggle";
-import { clienteService, ClienteResponse } from "../services/cliente.service";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,40 +69,47 @@ export default function Navbar() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-background text-foreground shadow-md sticky top-0 z-[9999] border-b border-border/60 backdrop-blur-md"
+        className="bg-background text-foreground sticky top-0 z-[9999] border-b border-border/60 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-[84px]">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 group">
+            <Link to="/" className="flex items-center gap-3 group shrink-0">
               <motion.div
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.6 }}
-                className="w-11 h-11 rounded-xl flex items-center justify-center shadow-md bg-primary text-primary-foreground"
+                whileHover={{ rotate: 0, scale: 1.06 }}
+                initial={{ rotate: -8 }}
+                className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-primary text-primary-foreground"
+                style={{ boxShadow: "0 10px 22px -6px rgba(123,30,58,0.4)" }}
               >
-                <Plane className="w-6 h-6" />
+                <Plane className="w-5 h-5" />
               </motion.div>
-              <div>
-                <span className="text-2xl font-bold tracking-tight text-primary">
+              <div className="leading-none">
+                <div
+                  className="text-[21px] text-primary"
+                  style={{ fontFamily: "'Fraunces', serif", fontWeight: 800 }}
+                >
                   AlekTours
-                </span>
-                <p className="text-xs text-muted-foreground -mt-1 font-normal">Viaja con estilo</p>
+                </div>
+                <div className="mt-1 text-[8px] uppercase tracking-[1.5px] font-bold text-muted-foreground/70">
+                  Agencia de viajes
+                </div>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
+            <div className="hidden lg:flex items-center gap-6 text-[12px] font-semibold">
 
               {/* Ofertas / Destinos */}
-              <div className="relative group">
+              <div className="relative">
                 <button
                   onMouseEnter={() => setShowOffersMenu(true)}
                   onMouseLeave={() => setShowOffersMenu(false)}
-                  className="flex items-center gap-1 text-foreground/80 hover:text-primary transition-all duration-300 font-medium"
+                  className="flex items-center gap-1.5 text-foreground/75 hover:text-primary transition-colors py-2"
                 >
+                  <Plane className="w-3 h-3 text-primary" />
                   Ofertas / Destinos
-                  <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
                 <AnimatePresence>
                   {showOffersMenu && (
@@ -98,7 +119,7 @@ export default function Navbar() {
                       exit={{ opacity: 0, y: 10 }}
                       onMouseEnter={() => setShowOffersMenu(true)}
                       onMouseLeave={() => setShowOffersMenu(false)}
-                      className="absolute top-full left-0 mt-2 w-56 bg-card text-card-foreground rounded-lg shadow-xl border border-border overflow-hidden"
+                      className="absolute top-full left-0 mt-2 w-56 bg-card text-card-foreground rounded-xl shadow-xl border border-border overflow-hidden"
                     >
                       <Link to="/search" className="block px-5 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all">
                         Todos los destinos
@@ -111,15 +132,28 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
+              {/* Hoteles (link directo, visual) */}
+              <Link to="/search?type=hotel" className="flex items-center gap-1.5 text-foreground/75 hover:text-primary transition-colors">
+                <Building2 className="w-3 h-3 text-primary" />
+                Hoteles
+              </Link>
+
+              {/* Paquetes */}
+              <Link to="/search" className="flex items-center gap-1.5 text-foreground/75 hover:text-primary transition-colors">
+                <Package className="w-3 h-3 text-primary" />
+                Paquetes
+              </Link>
+
               {/* Beneficios */}
-              <div className="relative group">
+              <div className="relative">
                 <button
                   onMouseEnter={() => setShowBenefitsMenu(true)}
                   onMouseLeave={() => setShowBenefitsMenu(false)}
-                  className="flex items-center gap-1 text-foreground/80 hover:text-primary transition-all duration-300 font-medium"
+                  className="flex items-center gap-1.5 text-foreground/75 hover:text-primary transition-colors py-2"
                 >
-                  Beneficios AleckTours
-                  <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <Gift className="w-3 h-3 text-primary" />
+                  Beneficios
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
                 <AnimatePresence>
                   {showBenefitsMenu && (
@@ -129,7 +163,7 @@ export default function Navbar() {
                       exit={{ opacity: 0, y: 10 }}
                       onMouseEnter={() => setShowBenefitsMenu(true)}
                       onMouseLeave={() => setShowBenefitsMenu(false)}
-                      className="absolute top-full left-0 mt-2 w-64 bg-card text-card-foreground rounded-lg shadow-xl border border-border overflow-hidden"
+                      className="absolute top-full left-0 mt-2 w-64 bg-card text-card-foreground rounded-xl shadow-xl border border-border overflow-hidden"
                     >
                       <Link to="/benefits" className="block px-5 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all group/item">
                         <div className="flex items-center gap-3">
@@ -148,15 +182,27 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
+              {/* Cruceros (visual, apunta a ofertas) */}
+              <Link to="/search" className="flex items-center gap-1.5 text-foreground/75 hover:text-primary transition-colors">
+                <Ship className="w-3 h-3 text-primary" />
+                Cruceros
+              </Link>
+
+              {/* Autos */}
+              <Link to="/search" className="flex items-center gap-1.5 text-foreground/75 hover:text-primary transition-colors">
+                <Car className="w-3 h-3 text-primary" />
+                Autos
+              </Link>
+
               {/* Información */}
-              <div className="relative group">
+              <div className="relative">
                 <button
                   onMouseEnter={() => setShowInfoMenu(true)}
                   onMouseLeave={() => setShowInfoMenu(false)}
-                  className="flex items-center gap-1 text-foreground/80 hover:text-primary transition-all duration-300 font-medium"
+                  className="flex items-center gap-1 text-foreground/75 hover:text-primary transition-colors py-2"
                 >
-                  Información
-                  <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  Más
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
                 <AnimatePresence>
                   {showInfoMenu && (
@@ -166,7 +212,7 @@ export default function Navbar() {
                       exit={{ opacity: 0, y: 10 }}
                       onMouseEnter={() => setShowInfoMenu(true)}
                       onMouseLeave={() => setShowInfoMenu(false)}
-                      className="absolute top-full left-0 mt-2 w-56 bg-card text-card-foreground rounded-lg shadow-xl border border-border overflow-hidden"
+                      className="absolute top-full right-0 mt-2 w-56 bg-card text-card-foreground rounded-xl shadow-xl border border-border overflow-hidden"
                     >
                       <Link to="/travel-info" className="block px-5 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all">
                         Info para tu viaje
@@ -181,17 +227,29 @@ export default function Navbar() {
                   )}
                 </AnimatePresence>
               </div>
+            </div>
 
-              {/* Login / Perfil */}
+            {/* Derecha: teléfono + login + theme toggle */}
+            <div className="hidden lg:flex items-center gap-5 shrink-0">
+              <div className="flex items-center gap-2 text-foreground/80">
+                <Phone className="w-4 h-4 text-primary" />
+                <div className="leading-tight">
+                  <b className="block text-[11px]">+57 601 123 4567</b>
+                  <small className="text-[8px] text-muted-foreground">Asesoría 24/7</small>
+                </div>
+              </div>
+
+              <ThemeToggle />
+
               {isAuthenticated ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <Link
                     to="/profile"
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 shadow-sm transition-all duration-300 font-medium text-sm"
+                    className="flex items-center gap-2 px-4 py-2.5 border border-border rounded-[10px] hover:bg-accent transition-all font-semibold text-[11px]"
                   >
-                    <User className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate max-w-[140px]">{displayName}</span>
-                    <span className="text-[12px] opacity-75 uppercase tracking-wider font-normal flex-shrink-0">
+                    <User className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    <span className="truncate max-w-[120px]">{displayName}</span>
+                    <span className="text-[9px] opacity-60 uppercase tracking-wider font-normal flex-shrink-0">
                       {getRoleLabel(usuario?.roles)}
                     </span>
                   </Link>
@@ -199,7 +257,7 @@ export default function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleLogout}
-                    className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                    className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-[10px] transition-all"
                     title="Cerrar sesión"
                   >
                     <LogOut className="w-4 h-4" />
@@ -210,26 +268,25 @@ export default function Navbar() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setShowLoginModal(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg hover:opacity-95 shadow-sm transition-all duration-300 font-medium text-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 border border-border rounded-[10px] hover:bg-accent transition-all font-bold text-[11px] text-primary"
                 >
-                  <LogIn className="w-4 h-4" />
-                  Iniciar Sesión
+                  <LogIn className="w-3.5 h-3.5" />
+                  Iniciar sesión
                 </motion.button>
               )}
             </div>
 
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-            </div>
-
             {/* Mobile menu button */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-muted text-foreground"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </motion.button>
+            <div className="flex items-center gap-2 lg:hidden">
+              <ThemeToggle />
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-lg hover:bg-muted text-foreground"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </motion.button>
+            </div>
           </div>
 
           {/* Mobile menu */}
@@ -239,7 +296,7 @@ export default function Navbar() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden py-4 border-t border-border overflow-hidden bg-background"
+                className="lg:hidden py-4 border-t border-border overflow-hidden bg-background"
               >
                 <div className="flex flex-col gap-2">
                   <Link to="/" className="px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
@@ -248,9 +305,20 @@ export default function Navbar() {
                   <Link to="/search" className="px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
                     Destinos
                   </Link>
+                  <Link to="/search?type=hotel" className="px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
+                    Hoteles
+                  </Link>
                   <Link to="/benefits" className="px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
                     Beneficios
                   </Link>
+                  <Link to="/contact" className="px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-all" onClick={() => setIsMenuOpen(false)}>
+                    Contáctanos
+                  </Link>
+
+                  <div className="flex items-center gap-2 px-4 py-2 text-foreground/70">
+                    <Phone className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold">+57 601 123 4567 · Asesoría 24/7</span>
+                  </div>
 
                   {isAuthenticated ? (
                     <>
