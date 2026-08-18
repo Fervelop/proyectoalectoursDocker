@@ -4,20 +4,23 @@ import {
   Bed,
   Car,
   CheckCircle,
+  Clock,
+  CreditCard,
   Dice5,
   Dumbbell,
-  Mail,
+  Heart,
+  Info,
   MapPin,
   PawPrint,
-  Phone,
   PlaneTakeoff,
+  Share,
+  ShieldCheck,
   Sparkles,
   Star,
   Users,
   UtensilsCrossed,
   Waves,
-  Wine,
-  XCircle,
+  Wine
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -25,6 +28,7 @@ import { Link, useParams } from "react-router";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { HabitacionResponse, HotelDetailResponse, hotelService } from "../services/hotel.service";
+
 // ── Mapa de íconos de características con colores semánticos basados en tu tema ──
 const CARACTERISTICA_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
   "Piscina al aire libre": { icon: Waves, color: "text-primary" },
@@ -55,6 +59,14 @@ const CITY_IMAGES: Record<string, string> = {
 };
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=80";
 
+// Imágenes genéricas de lujo para la galería Bento Grid
+const GALLERY_FILLERS = [
+  "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
+  "https://images.unsplash.com/photo-1542314831-c6a4d140f6c2?w=800&q=80",
+  "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&q=80",
+  "https://images.unsplash.com/photo-1590490359683-658d34c8f90f?w=800&q=80",
+];
+
 function getImage(ciudad: string) {
   return CITY_IMAGES[ciudad?.toLowerCase().trim()] ?? DEFAULT_IMAGE;
 }
@@ -70,7 +82,6 @@ export default function HotelDetail() {
   const { id } = useParams();
   const [hotel, setHotel] = useState<HotelDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  // NUEVO: habitación que el usuario selecciona antes de ir a Checkout
   const [selectedHabitacion, setSelectedHabitacion] = useState<HabitacionResponse | null>(null);
 
   useEffect(() => {
@@ -81,25 +92,18 @@ export default function HotelDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // ── Loading skeleton adaptado al fondo ──
   if (loading) return (
     <div className="min-h-screen bg-background transition-colors duration-200">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8 animate-pulse">
         <div className="h-5 w-32 bg-muted rounded mb-6" />
-        <div className="h-96 bg-muted rounded-xl mb-8" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="h-[50vh] bg-muted rounded-2xl mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card rounded-xl p-8 space-y-4 border border-border">
-              <div className="h-6 w-48 bg-muted rounded" />
-              <div className="grid grid-cols-2 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-16 bg-muted rounded-xl" />
-                ))}
-              </div>
-            </div>
+            <div className="h-40 bg-card border border-border rounded-2xl" />
+            <div className="h-96 bg-card border border-border rounded-2xl" />
           </div>
-          <div className="h-64 bg-card rounded-xl border border-border shadow-sm" />
+          <div className="h-[400px] bg-card border border-border rounded-2xl" />
         </div>
       </div>
     </div>
@@ -109,8 +113,11 @@ export default function HotelDetail() {
     <div className="min-h-screen bg-background transition-colors duration-200">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-medium text-foreground mb-4">Hotel no encontrado</h1>
-        <Link to="/search" className="text-primary hover:underline font-medium">← Volver a hoteles</Link>
+        <div className="bg-muted w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <MapPin className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-4">Hotel no encontrado</h1>
+        <Link to="/search" className="text-primary hover:underline font-medium">← Volver a explorar destinos</Link>
       </div>
     </div>
   );
@@ -122,108 +129,119 @@ export default function HotelDetail() {
     : null;
   const caracteristicas = hotel.hotel_caracteristicas ?? [];
 
-  // NUEVO: el link de checkout ahora lleva la habitación elegida como query param.
-  // Checkout usará esta habitación real (con su precio real) en vez de un precio inventado.
   const checkoutHref = selectedHabitacion
     ? `/checkout/${hotel.id_hotel}?habitacion=${selectedHabitacion.id_habitacion}`
     : "#";
 
   return (
     <>
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-200 pb-20">
         <Navbar />
 
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Botón Volver */}
-          <Link
-            to="/search"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-6 transition-colors font-medium text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver a hoteles
-          </Link>
 
-          {/* Hero Banner del Hotel */}
-          <div className="relative h-96 rounded-xl overflow-hidden mb-8 border border-border shadow-md">
-            <img
-              src={imagen}
-              alt={hotel.nombre_hotel}
-              className="w-full h-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_IMAGE; }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-              <div className="flex items-center gap-2 mb-2 text-white/90 text-sm">
-                <MapPin className="w-4 h-4 text-primary" />
-                <span>{hotel.ciudad}, {hotel.pais}</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">{hotel.nombre_hotel}</h1>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star key={i} className={`w-4 h-4 ${i < (hotel.calificacion ?? 0) ? "fill-chart-2 text-chart-2" : "fill-white/20 text-white/20"}`} />
-                  ))}
-                </div>
-                <span className="text-sm font-medium opacity-90 ml-1">{hotel.calificacion} estrellas</span>
-              </div>
+          {/* Breadcrumbs Comercial */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link to="/search" className="hover:text-primary transition-colors flex items-center gap-1">
+                <ArrowLeft className="w-4 h-4" /> Búsqueda
+              </Link>
+              <span>/</span>
+              <span className="font-medium text-foreground">{hotel.pais}</span>
+              <span>/</span>
+              <span className="font-medium text-foreground">{hotel.ciudad}</span>
+            </nav>
+            <div className="flex items-center gap-3">
+              <button className="flex items-center gap-2 text-sm font-medium hover:bg-muted px-3 py-1.5 rounded-md transition-colors">
+                <Share className="w-4 h-4" /> Compartir
+              </button>
+              <button className="flex items-center gap-2 text-sm font-medium hover:bg-muted px-3 py-1.5 rounded-md transition-colors">
+                <Heart className="w-4 h-4" /> Guardar
+              </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* ── Columna Principal de Contenido ── */}
-            <div className="lg:col-span-2 space-y-6">
+          {/* Título Comercial */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider">
+                Hotel Destacado
+              </span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Star key={i} className={`w-4 h-4 ${i < (hotel.calificacion ?? 0) ? "fill-chart-2 text-chart-2" : "fill-muted text-muted"}`} />
+                ))}
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2">
+              {hotel.nombre_hotel}
+            </h1>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="hover:underline cursor-pointer">{hotel.direccion || 'Ubicación céntrica'}, {hotel.ciudad}</span>
+              <span>•</span>
+              <span className="text-primary font-medium cursor-pointer hover:underline">Ver mapa</span>
+            </div>
+          </div>
 
-              {/* Ficha técnica e Información básica */}
-              <section className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-sm transition-colors">
-                <h2 className="text-xl font-medium text-foreground mb-6">Información del hotel</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { icon: MapPin, label: "Ciudad", value: hotel.ciudad },
-                    { icon: MapPin, label: "País", value: hotel.pais },
-                    { icon: MapPin, label: "Dirección", value: hotel.direccion },
-                    { icon: Mail, label: "Correo", value: hotel.correo_electronico },
-                    { icon: Phone, label: "Teléfono", value: hotel.telefono },
-                  ].filter(i => i.value).map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-3 p-4 bg-input-background rounded-xl border border-border/40">
-                      <Icon className="w-5 h-5 text-primary flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">{label}</p>
-                        <p className="font-medium text-foreground truncate text-sm md:text-base">{value}</p>
-                      </div>
-                    </div>
-                  ))}
+          {/* Galería de Imágenes (Estilo Bento Grid) */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-10 h-[45vh] md:h-[55vh] rounded-2xl overflow-hidden group">
+            <div className="md:col-span-2 md:row-span-2 relative overflow-hidden h-full">
+              <img
+                src={imagen}
+                alt={hotel.nombre_hotel}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_IMAGE; }}
+              />
+            </div>
+            {GALLERY_FILLERS.map((img, idx) => (
+              <div key={idx} className="hidden md:block relative overflow-hidden h-full">
+                <img
+                  src={img}
+                  alt="Instalaciones"
+                  className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* ── Columna Principal (Izquierda) ── */}
+            <div className="lg:col-span-2 space-y-10">
+
+              {/* Acerca de */}
+              <section>
+                <h2 className="text-2xl font-semibold mb-4">Acerca de este alojamiento</h2>
+                <div className="prose prose-sm md:prose-base dark:prose-invert text-muted-foreground">
+                  <p>
+                    Ubicado estratégicamente en <strong>{hotel.ciudad}</strong>, {hotel.nombre_hotel} ofrece una experiencia excepcional que combina comodidad moderna con la calidez del servicio local.
+                    Ideal tanto para estancias de negocios como para escapadas de turismo.
+                  </p>
+                  <p className="mt-4">
+                    Nuestros huéspedes destacan la limpieza, la atención del personal y nuestra ubicación privilegiada cerca de los principales puntos de interés. Siéntete como en casa mientras descubres lo mejor de {hotel.pais}.
+                  </p>
                 </div>
               </section>
 
-              {/* Sección Amenidades */}
+              <hr className="border-border" />
+
+              {/* Servicios y Amenidades */}
               {caracteristicas.length > 0 && (
-                <section className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-sm transition-colors">
-                  <h2 className="text-xl font-medium text-foreground mb-6">Servicios y amenidades</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <section>
+                  <h2 className="text-2xl font-semibold mb-6">¿Qué ofrece este lugar?</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
                     {caracteristicas.map((hc) => {
                       const nombre = hc.caracteristica?.nombre_caracteristica ?? "";
                       const entry = CARACTERISTICA_ICONS[nombre];
-                      const Icon = entry?.icon;
-                      const color = entry?.color ?? "text-muted-foreground";
+                      const Icon = entry?.icon || CheckCircle;
+                      const color = entry?.color || "text-primary";
+
+                      if (!hc.disponible) return null; // Solo mostramos lo disponible comercialmente
+
                       return (
-                        <div
-                          key={hc.id_caracteristica}
-                          className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${hc.disponible
-                            ? "bg-card border-border shadow-xs"
-                            : "bg-muted/40 border-border/50 opacity-40 select-none"
-                            }`}
-                        >
-                          {Icon
-                            ? <Icon className={`w-5 h-5 flex-shrink-0 ${hc.disponible ? color : "text-muted-foreground/60"}`} />
-                            : <div className="w-5 h-5 rounded-full bg-muted flex-shrink-0" />
-                          }
-                          <span className={`text-sm font-medium ${hc.disponible ? "text-foreground" : "text-muted-foreground line-through"}`}>
-                            {nombre}
-                          </span>
-                          {hc.disponible
-                            ? <CheckCircle className="w-4 h-4 text-green-500 ml-auto flex-shrink-0" />
-                            : <XCircle className="w-4 h-4 text-muted-foreground/50 ml-auto flex-shrink-0" />
-                          }
+                        <div key={hc.id_caracteristica} className="flex items-center gap-3">
+                          <Icon className={`w-6 h-6 ${color}`} />
+                          <span className="font-medium text-foreground/80">{nombre}</span>
                         </div>
                       );
                     })}
@@ -231,154 +249,205 @@ export default function HotelDetail() {
                 </section>
               )}
 
-              {/* Listado de Habitaciones — AHORA SELECCIONABLES */}
+              <hr className="border-border" />
+
+              {/* Listado de Habitaciones — DISEÑO OPTIMIZADO */}
               {hotel.habitaciones?.length > 0 && (
-                <section className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-sm transition-colors">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-medium text-foreground">Elige tu habitación</h2>
-                    <span className="text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
-                      {habitacionesDisponibles.length} de {hotel.habitaciones.length} libres
-                    </span>
+                <section id="habitaciones">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
+                    <div>
+                      <h2 className="text-2xl font-semibold">Disponibilidad</h2>
+                      <p className="text-muted-foreground mt-1 text-sm">Selecciona una habitación para proceder con la reserva.</p>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  <div className="space-y-4">
                     {hotel.habitaciones.map((hab) => {
                       const disponible = hab.estado === "disponible";
                       const seleccionada = selectedHabitacion?.id_habitacion === hab.id_habitacion;
+
                       return (
-                        <motion.button
+                        <motion.div
                           key={hab.id_habitacion}
-                          type="button"
-                          disabled={!disponible}
-                          onClick={() => setSelectedHabitacion(hab)}
-                          whileHover={disponible ? { y: -2 } : {}}
-                          className={`text-left border rounded-xl p-5 bg-card/50 transition-all duration-300 flex flex-col justify-between ${!disponible
-                              ? "opacity-50 cursor-not-allowed border-border"
-                              : seleccionada
-                                ? "border-primary ring-2 ring-primary/30 shadow-md"
-                                : "border-border hover:shadow-md hover:border-primary/30"
+                          whileHover={disponible && !seleccionada ? { y: -2 } : {}}
+                          onClick={() => disponible && setSelectedHabitacion(hab)}
+                          className={`relative flex flex-col md:flex-row border rounded-2xl overflow-hidden transition-all duration-300 bg-card ${!disponible
+                            ? "opacity-60 grayscale-[40%] cursor-not-allowed"
+                            : seleccionada
+                              ? "border-primary ring-2 ring-primary/20 shadow-lg cursor-default"
+                              : "border-border hover:border-primary/40 hover:shadow-md cursor-pointer"
                             }`}
                         >
-                          <div>
-                            <div className="flex items-start justify-between mb-3 gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <Bed className="w-4 h-4 text-primary shrink-0" />
-                                <span className="font-bold text-foreground truncate text-sm md:text-base">
-                                  {hab.tipo_habitacion?.nombre_tipo ?? "Habitación"}
-                                </span>
-                              </div>
-                              <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${ESTADO_STYLES[hab.estado] ?? "bg-muted text-muted-foreground"}`}>
-                                {hab.estado.charAt(0).toUpperCase() + hab.estado.slice(1)}
+                          {/* Info de la Habitación */}
+                          <div className="p-5 md:p-6 flex-1">
+                            <div className="flex items-start justify-between mb-2">
+                              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                                {hab.tipo_habitacion?.nombre_tipo ?? "Habitación"}
+                              </h3>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${ESTADO_STYLES[hab.estado]}`}>
+                                {hab.estado}
                               </span>
                             </div>
 
                             {hab.tipo_habitacion?.descripcion && (
-                              <p className="text-xs text-muted-foreground line-clamp-2 mb-4">{hab.tipo_habitacion.descripcion}</p>
+                              <p className="text-sm text-muted-foreground mb-4 max-w-lg">
+                                {hab.tipo_habitacion.descripcion}
+                              </p>
                             )}
+
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              <span className="inline-flex items-center gap-1.5 bg-green-500/10 text-green-600 dark:text-green-400 px-2.5 py-1 rounded text-xs font-semibold">
+                                <CheckCircle className="w-3.5 h-3.5" /> Cancelación Gratis
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded text-xs font-semibold">
+                                <UtensilsCrossed className="w-3.5 h-3.5" /> Desayuno Incluido
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground font-medium">
+                              <span className="flex items-center gap-1.5"><Bed className="w-4 h-4 text-primary" /> Cama doble</span>
+                              <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Máx. {hab.tipo_habitacion?.capacidad_personas} pers.</span>
+                            </div>
                           </div>
 
-                          <div className="mt-auto pt-2 border-t border-border/40">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                                <Users className="w-3.5 h-3.5" />
-                                <span>Capacidad: {hab.tipo_habitacion?.capacidad_personas ?? "?"} pers.</span>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[10px] text-muted-foreground">Por noche</p>
-                                <p className="text-base font-bold text-primary">
-                                  ${Number(hab.precio_noche).toLocaleString("es-CO")}
-                                </p>
-                              </div>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground/60 mt-2">Habitación #{hab.numero_habitacion}</p>
-                          </div>
+                          {/* Caja de Precio (Lado derecho en Desktop) */}
+                          <div className="bg-muted/30 p-5 md:p-6 flex flex-col justify-center items-start md:items-end md:w-64 border-t md:border-t-0 md:border-l border-border">
+                            <p className="text-xs text-muted-foreground font-medium mb-1">Precio por 1 noche</p>
+                            <p className="text-2xl font-bold text-primary mb-1">
+                              ${Number(hab.precio_noche).toLocaleString("es-CO")}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground mb-4">Incluye impuestos y cargos</p>
 
-                          {seleccionada && (
-                            <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary">
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              Seleccionada
-                            </div>
-                          )}
-                        </motion.button>
+                            <button
+                              disabled={!disponible}
+                              className={`w-full py-2.5 px-4 rounded-xl font-bold text-sm transition-all ${!disponible
+                                ? "bg-muted text-muted-foreground border border-border"
+                                : seleccionada
+                                  ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary ring-offset-1 ring-offset-background"
+                                  : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
+                                }`}
+                            >
+                              {!disponible ? "No disponible" : seleccionada ? "Seleccionada" : "Elegir"}
+                            </button>
+                          </div>
+                        </motion.div>
                       );
                     })}
                   </div>
                 </section>
               )}
+
+              <hr className="border-border" />
+
+              {/* Políticas simuladas */}
+              <section>
+                <h2 className="text-2xl font-semibold mb-6">Reglas del alojamiento</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex gap-4 p-5 rounded-2xl border border-border bg-card">
+                    <Clock className="w-6 h-6 text-primary shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-foreground">Horarios</h4>
+                      <p className="text-sm text-muted-foreground mt-1">Check-in: 15:00 - 23:00<br />Check-out: Hasta las 12:00</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 p-5 rounded-2xl border border-border bg-card">
+                    <Info className="w-6 h-6 text-primary shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-foreground">Políticas</h4>
+                      <p className="text-sm text-muted-foreground mt-1">Se requiere presentar documento de identidad al momento del registro.</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
             </div>
 
             {/* ── Sidebar de Reserva (Sticky) ── */}
-            <div className="lg:col-span-1">
-              <div className="bg-card rounded-xl border border-border p-6 md:p-8 sticky top-24 shadow-sm transition-colors">
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star key={i} className={`w-4 h-4 ${i < (hotel.calificacion ?? 0) ? "fill-chart-2 text-chart-2" : "fill-muted border-muted text-muted"}`} />
-                  ))}
-                </div>
-                <h2 className="text-lg font-medium text-foreground mb-4 leading-snug">{hotel.nombre_hotel}</h2>
+            <div className="lg:col-span-1 relative">
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-xl sticky top-24 transition-colors">
 
-                <div className="space-y-3 mb-6 pb-5 border-b border-border text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Destino</span>
-                    <span className="font-medium text-foreground">{hotel.ciudad}</span>
+                {/* Gatillo de Urgencia (FOMO) */}
+                <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3 mb-6 flex items-start gap-3">
+                  <span className="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive"></span>
+                  </span>
+                  <div className="text-sm text-destructive dark:text-red-400">
+                    <span className="font-bold block">¡Muy solicitado!</span>
+                    Este hotel se reserva frecuentemente.
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Calificación</span>
-                    <span className="font-medium text-foreground">{hotel.calificacion} estrellas</span>
+                </div>
+
+                {/* Info superior */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold leading-tight mb-2">{hotel.nombre_hotel}</h3>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="flex justify-between">
+                      <span>Destino</span>
+                      <span className="font-medium text-foreground">{hotel.ciudad}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Contacto</span>
+                      <span className="font-medium text-foreground">{hotel.telefono}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total unidades</span>
-                    <span className="font-medium text-foreground">{hotel.habitaciones?.length ?? 0} habs.</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Disponibilidad hoy</span>
-                    <span className={`font-semibold ${habitacionesDisponibles.length > 0 ? "text-green-500" : "text-destructive"}`}>
-                      {habitacionesDisponibles.length > 0 ? `${habitacionesDisponibles.length} disponibles` : "Completo"}
+                </div>
+
+                {/* Caja de Precio Dinámica */}
+                <div className="bg-muted/40 rounded-xl p-5 mb-6 border border-border">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-foreground">
+                      {selectedHabitacion ? selectedHabitacion.tipo_habitacion?.nombre_tipo : "Selecciona habitación"}
                     </span>
                   </div>
+                  <div className="flex justify-between items-center text-sm text-muted-foreground mb-4">
+                    <span>1 Noche, {selectedHabitacion ? selectedHabitacion.tipo_habitacion?.capacidad_personas : "2"} pers.</span>
+                  </div>
+
+                  <div className="border-t border-border pt-4 flex justify-between items-end">
+                    <span className="font-bold text-foreground">Total</span>
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-primary">
+                        ${(selectedHabitacion?.precio_noche ?? precioMin ?? 0).toLocaleString("es-CO")}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Caja de precio: si ya eligió habitación, muestra ESA tarifa; si no, la tarifa mínima */}
-                {(selectedHabitacion || precioMin) && (
-                  <div className="bg-accent text-accent-foreground rounded-xl p-4 mb-6 text-center border border-border">
-                    <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">
-                      {selectedHabitacion ? "Tarifa de tu habitación" : "Mejor tarifa desde"}
-                    </p>
-                    <p className="text-3xl font-bold text-primary tracking-tight">
-                      ${(selectedHabitacion?.precio_noche ?? precioMin!).toLocaleString("es-CO")}
-                    </p>
-                    <p className="text-xs text-muted-foreground/80 mt-0.5">COP por noche</p>
-                  </div>
-                )}
-
-                {!selectedHabitacion && habitacionesDisponibles.length > 0 && (
-                  <p className="text-xs text-center text-muted-foreground mb-4">
-                    👆 Elige una habitación arriba para continuar
-                  </p>
-                )}
-
-                {/* Botón de acción */}
-                <motion.div whileHover={selectedHabitacion ? { scale: 1.01 } : {}} whileTap={selectedHabitacion ? { scale: 0.99 } : {}}>
-                  <Link
-                    to={checkoutHref}
-                    aria-disabled={!selectedHabitacion}
-                    onClick={(e) => { if (!selectedHabitacion) e.preventDefault(); }}
-                    className={`block w-full py-3.5 text-center font-medium rounded-xl transition-all duration-200 text-sm border shadow-xs ${selectedHabitacion
-                        ? "bg-primary text-primary-foreground border-transparent hover:opacity-95"
-                        : "bg-muted text-muted-foreground border-border cursor-not-allowed pointer-events-none"
-                      }`}
-                  >
-                    {habitacionesDisponibles.length === 0
-                      ? "Sin disponibilidad"
-                      : selectedHabitacion
-                        ? "Reservar esta habitación"
-                        : "Selecciona una habitación"}
-                  </Link>
-                </motion.div>
-                <p className="text-[11px] text-muted-foreground text-center mt-4">
-                  🔒 Pago 100% protegido • Cancelación flexible
+                {/* Botón de Checkout */}
+                <Link
+                  to={checkoutHref}
+                  onClick={(e) => {
+                    if (!selectedHabitacion) {
+                      e.preventDefault();
+                      document.getElementById('habitaciones')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className={`flex justify-center items-center w-full py-4 text-base font-bold rounded-xl transition-all ${selectedHabitacion
+                    ? "bg-primary text-primary-foreground shadow-md hover:scale-[1.02] hover:shadow-lg"
+                    : "bg-primary/50 text-white cursor-pointer"
+                    }`}
+                >
+                  {selectedHabitacion ? "Reservar ahora" : "Ver opciones de habitación"}
+                </Link>
+                <p className="text-xs text-center text-muted-foreground mt-3 font-medium">
+                  No se te cobrará nada todavía
                 </p>
+
+                {/* Badges de confianza */}
+                <div className="mt-6 pt-6 border-t border-border space-y-4">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
+                    <span>Transacción segura y cifrada</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <CreditCard className="w-5 h-5 text-blue-500 shrink-0" />
+                    <span>Aceptamos múltiples métodos de pago</span>
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>
