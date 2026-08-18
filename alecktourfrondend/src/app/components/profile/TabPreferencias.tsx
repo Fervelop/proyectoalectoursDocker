@@ -29,77 +29,90 @@ interface Props { preferencias: any; }
 
 export default function TabPreferencias({ preferencias }: Props) {
   return (
-    <>
+    <div className="w-full max-w-5xl mx-auto">
       {/* ── Header de Sección ── */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-5 border-b border-border/50 pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight text-white">Mis Preferencias</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Así personalizamos tu experiencia y recomendaciones de viaje</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
+            Mis Preferencias
+          </h2>
+          <p className="text-muted-foreground text-sm md:text-base mt-2">
+            Calibramos nuestro motor de recomendaciones basándonos en tu estilo de viaje.
+          </p>
         </div>
         <Link
           to="/preferences"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-95 transition-all shadow-sm shrink-0"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 shrink-0"
         >
           <PenSquare className="w-4 h-4" />
-          <span>{preferencias ? "Editar perfil" : "Completar"}</span>
+          <span>{preferencias ? "Actualizar perfil" : "Completar perfil"}</span>
         </Link>
       </div>
 
       {/* ── Estado Vacío (Sin Preferencias) ── */}
       {!preferencias ? (
-        <div className="bg-card text-card-foreground border border-border rounded-xl p-12 text-center shadow-sm max-w-2xl mx-auto transition-colors duration-200">
-          <div className="w-16 h-16 bg-primary/5 border border-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Heart className="w-8 h-8 text-primary" />
+        <div className="bg-card/50 border-2 border-dashed border-border rounded-3xl p-12 md:p-16 text-center hover:bg-card/80 transition-colors duration-300">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <Heart className="w-10 h-10 text-primary" />
           </div>
-          <h3 className="text-lg font-bold text-foreground tracking-tight">Sin preferencias guardadas</h3>
-          <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-            Cuéntanos qué te apasiona para calibrar el motor de sugerencias inteligentes con tus destinos ideales.
+          <h3 className="text-2xl font-bold text-foreground tracking-tight mb-2">
+            Descubre tu viaje ideal
+          </h3>
+          <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+            Aún no conocemos tus gustos. Cuéntanos qué te apasiona y deja que diseñemos la experiencia perfecta para ti.
           </p>
           <Link
             to="/preferences"
-            className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-95 transition-all shadow-sm"
+            className="inline-block px-8 py-3.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-md"
           >
-            Configurar preferencias
+            Configurar preferencias ahora
           </Link>
         </div>
       ) : (
         // ── Vista de Datos Estructurada ──
-        <div className="space-y-6">
+        <div className="space-y-8">
 
           {/* Bloque: Intereses Primarios */}
-          <div className="bg-card text-card-foreground border border-border rounded-xl p-5 md:p-6 shadow-sm transition-colors duration-200">
-            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted-foreground/90 mb-4 flex items-center gap-2">
-              <Heart className="w-4 h-4 text-primary" /> Tus intereses principales
-            </h3>
+          <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm transition-colors duration-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <Heart className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">
+                Tus intereses principales
+              </h3>
+            </div>
 
             {preferencias.intereses && preferencias.intereses.length > 0 ? (
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-3">
                 {(preferencias.intereses).map((interes: string) => {
                   const Icon = interesIcons[interes] || Compass;
                   return (
                     <div
                       key={interes}
-                      className="flex items-center gap-2 px-3.5 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-semibold border border-primary/10 transition-colors"
+                      className="group flex items-center gap-2.5 px-5 py-2.5 bg-background border border-border hover:border-primary/30 rounded-full text-sm font-semibold text-foreground transition-all hover:shadow-sm cursor-default"
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <Icon className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                       <span>{interesLabels[interes] || interes}</span>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic">No has seleccionado intereses específicos aún.</p>
+              <p className="text-sm text-muted-foreground italic bg-background p-4 rounded-xl border border-border/50">
+                No has seleccionado intereses específicos aún.
+              </p>
             )}
           </div>
 
-          {/* Bloque: Requerimientos y Parámetros Logísticos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {/* Bloque: Requerimientos y Parámetros Logísticos (Estilo Bento Box) */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {[
-              { label: "Compañía de viaje", value: preferencias.compania, icon: User },
-              { label: "Presupuesto estimado", value: preferencias.presupuesto, icon: CreditCard },
-              { label: "Clima preferido", value: preferencias.clima, icon: MapPin },
-              { label: "Ritmo del viaje", value: preferencias.ritmo, icon: Clock },
-              { label: "Transporte idóneo", value: preferencias.transporte, icon: Plane },
+              { label: "Compañía", value: preferencias.compania, icon: User },
+              { label: "Presupuesto", value: preferencias.presupuesto, icon: CreditCard },
+              { label: "Clima ideal", value: preferencias.clima, icon: MapPin },
+              { label: "Ritmo", value: preferencias.ritmo, icon: Clock },
+              { label: "Transporte", value: preferencias.transporte, icon: Plane },
             ]
               .filter(item => item.value)
               .map(item => {
@@ -107,18 +120,20 @@ export default function TabPreferencias({ preferencias }: Props) {
                 return (
                   <div
                     key={item.label}
-                    className="bg-card text-card-foreground border border-border rounded-xl p-4 flex items-center gap-3.5 shadow-sm transition-colors duration-200"
+                    className="group bg-card border border-border hover:border-primary/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-default"
                   >
-                    <div className="w-10 h-10 bg-primary/5 border border-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                        {item.label}
-                      </span>
-                      <p className="font-bold text-foreground text-sm capitalize truncate mt-0.5">
-                        {item.value}
-                      </p>
+                    <div className="flex flex-col gap-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
+                        <Icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
+                      </div>
+                      <div>
+                        <span className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
+                          {item.label}
+                        </span>
+                        <p className="font-bold text-foreground text-lg capitalize truncate">
+                          {item.value}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -127,6 +142,6 @@ export default function TabPreferencias({ preferencias }: Props) {
 
         </div>
       )}
-    </>
+    </div>
   );
 }

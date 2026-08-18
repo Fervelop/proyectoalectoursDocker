@@ -1,139 +1,202 @@
-import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Lock } from "lucide-react";
+import { Camera, Eye, EyeOff, Lock, User } from "lucide-react";
 import { useState } from "react";
-import { apiFetch } from "../../api/v1/api";
 
-interface Props { clienteData: any; }
-
-export default function TabCuenta({ clienteData }: Props) {
-  const [form, setForm] = useState({ actual: "", nueva: "", confirmar: "" });
-  const [show, setShow] = useState({ actual: false, nueva: false, confirmar: false });
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error"; msg: string } | null>(null);
-
-  const toggle = (field: keyof typeof show) => setShow(p => ({ ...p, [field]: !p[field] }));
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm(p => ({ ...p, [e.target.name]: e.target.value }));
-
-  const handleSubmit = async () => {
-    setStatus(null);
-    if (!form.actual || !form.nueva || !form.confirmar)
-      return setStatus({ type: "error", msg: "Completa todos los campos." });
-    if (form.nueva.length < 8)
-      return setStatus({ type: "error", msg: "La nueva contraseña debe tener al menos 8 caracteres." });
-    if (form.nueva !== form.confirmar)
-      return setStatus({ type: "error", msg: "Las contraseñas no coinciden." });
-
-    setLoading(true);
-    try {
-      await apiFetch(`/clientes/${clienteData.id_cliente}/cambiar-contrasena`, {
-        method: "PUT",
-        body: { contrasena_actual: form.actual, nueva_contrasena: form.nueva },
-      });
-      setStatus({ type: "success", msg: "Contraseña actualizada correctamente." });
-      setForm({ actual: "", nueva: "", confirmar: "" });
-    } catch (err: any) {
-      setStatus({ type: "error", msg: err?.message ?? "Error al cambiar la contraseña." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fields: { name: keyof typeof form; label: string; key: keyof typeof show }[] = [
-    { name: "actual", label: "Contraseña actual", key: "actual" },
-    { name: "nueva", label: "Nueva contraseña", key: "nueva" },
-    { name: "confirmar", label: "Confirmar nueva contraseña", key: "confirmar" },
-  ];
+export default function TabCuenta() {
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <>
-      {/* Título de la pestaña */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground  text-white tracking-tight">Mi Cuenta</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Información de tu perfil y configuración de seguridad</p>
+    <div className="w-full max-w-4xl">
+      {/* ── Encabezado ── */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+          Mi Cuenta
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Información de tu perfil y configuración de seguridad
+        </p>
       </div>
 
-      {/* Datos del perfil */}
-      <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border p-6 mb-6 transition-colors duration-200">
-        {clienteData ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { label: "Nombre completo", value: `${clienteData.nombre} ${clienteData.apellido}` },
-              { label: "Documento de Identidad / Cédula", value: clienteData.cedula },
-              { label: "Correo electrónico", value: clienteData.correo },
-              { label: "Teléfono Celular", value: clienteData.celular },
-              { label: "Ciudad", value: clienteData.ciudad },
-              { label: "País", value: clienteData.pais },
-              { label: "Dirección de residencia", value: clienteData.direccion },
-              {
-                label: "Fecha de nacimiento", value: clienteData.fecha_nacimiento
-                  ? new Date(clienteData.fecha_nacimiento).toLocaleDateString("es-CO", { day: 'numeric', month: 'long', year: 'numeric' }) : null
-              },
-            ].filter(item => item.value).map(item => (
-              <div key={item.label} className="p-3.5 bg-muted/40 rounded-lg border border-border/40">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80 mb-0.5">{item.label}</p>
-                <p className="font-semibold text-foreground text-sm">{item.value}</p>
-              </div>
-            ))}
+      <div className="space-y-8">
+
+        {/* ── SECCIÓN 1: Foto de Perfil ── */}
+        <div className="bg-card border border-border/50 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col sm:flex-row items-center gap-6">
+
+          {/* Avatar con botón superpuesto */}
+          <div className="relative group shrink-0">
+            <div className="w-24 h-24 bg-primary/10 rounded-full border-4 border-background flex items-center justify-center shadow-md overflow-hidden">
+              <User className="w-10 h-10 text-primary" />
+            </div>
+            <button
+              className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full border-2 border-card shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer"
+              title="Cambiar foto de perfil"
+            >
+              <Camera className="w-4 h-4" />
+            </button>
           </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-8 text-sm">No se encontró información del perfil.</p>
-        )}
-      </div>
 
-      {/* Cambiar contraseña */}
-      <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border p-6 transition-colors duration-200">
-        <h2 className="text-lg font-bold text-foreground tracking-tight mb-0.5 flex items-center gap-2">
-          <Lock className="w-4 h-4 text-primary" /> Seguridad de la cuenta
-        </h2>
-        <p className="text-muted-foreground text-xs mb-6">Actualiza tu contraseña de acceso para mantener la cuenta protegida</p>
+          {/* Textos y botón de acción */}
+          <div className="text-center sm:text-left">
+            <h2 className="text-lg font-bold text-foreground">Foto de perfil</h2>
+            <p className="text-sm text-muted-foreground mb-4 mt-1 max-w-md">
+              Sube una nueva foto para personalizar tu cuenta. Recomendamos usar una imagen cuadrada de al menos 256x256px en formato JPG o PNG.
+            </p>
+            <div className="flex items-center justify-center sm:justify-start gap-3">
+              <button className="text-sm font-semibold bg-background border border-border hover:border-primary/50 hover:text-primary px-5 py-2.5 rounded-full transition-all duration-200 active:scale-95 shadow-sm">
+                Subir nueva imagen
+              </button>
+              <button className="text-sm font-semibold text-destructive hover:text-destructive/80 px-4 py-2.5 transition-colors">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <div className="space-y-4 max-w-md">
-          {fields.map(({ name, label, key }) => (
-            <div key={name} className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">{label}</label>
+        {/* ── SECCIÓN 2: Información Personal (Estilo Bento Box) ── */}
+        <div className="bg-card border border-border/50 rounded-3xl p-6 md:p-8 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Nombre Completo
+              </label>
+              <p className="text-base font-bold text-foreground">juanpedro castillo</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Documento de Identidad / Cédula
+              </label>
+              <p className="text-base font-bold text-foreground">102300231</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Correo Electrónico
+              </label>
+              <p className="text-base font-bold text-foreground">nata12@gmail.com</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Teléfono Celular
+              </label>
+              <p className="text-base font-bold text-foreground">32228128</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Ciudad
+              </label>
+              <p className="text-base font-bold text-foreground">Manizales</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                País
+              </label>
+              <p className="text-base font-bold text-foreground">Colombia</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Dirección de Residencia
+              </label>
+              <p className="text-base font-bold text-foreground">calle juanito alcachofa</p>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-colors">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                Fecha de Nacimiento
+              </label>
+              <p className="text-base font-bold text-foreground">31 de diciembre de 1008</p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── SECCIÓN 3: Seguridad de la cuenta ── */}
+        <div className="bg-card border border-border/50 rounded-3xl p-6 md:p-8 shadow-sm">
+
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+              <Lock className="w-5 h-5 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Seguridad de la cuenta</h2>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-6 ml-13">
+            Actualiza tu contraseña de acceso para mantener la cuenta protegida
+          </p>
+
+          <div className="space-y-5 max-w-md ml-13">
+            {/* Input: Contraseña actual */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Contraseña actual</label>
               <div className="relative">
                 <input
-                  type={show[key] ? "text" : "password"}
-                  name={name}
-                  value={form[name]}
-                  onChange={handleChange}
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2 pr-10 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-muted/30 text-foreground placeholder:text-muted-foreground/50 transition-all"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
                 <button
                   type="button"
-                  onClick={() => toggle(key)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {show[key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-          ))}
 
-          {status && (
-            <div className={`flex items-start gap-2.5 text-xs px-4 py-3 rounded-lg border transition-all ${status.type === "success"
-              ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
-              : "bg-destructive/10 text-destructive border-destructive/20"
-              }`}>
-              {status.type === "success"
-                ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-              <span className="font-medium">{status.msg}</span>
+            {/* Input: Nueva contraseña */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Nueva contraseña</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          )}
 
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-95 active:scale-95 disabled:opacity-50 shadow-sm"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-            {loading ? "Guardando cambios..." : "Actualizar contraseña"}
-          </button>
+            {/* Input: Confirmar nueva contraseña */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Confirmar nueva contraseña</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Botón */}
+            <div className="pt-2">
+              <button className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-3 rounded-full hover:bg-primary/90 hover:scale-[0.98] transition-all active:scale-95 shadow-md">
+                <Lock className="w-4 h-4" />
+                Actualizar contraseña
+              </button>
+            </div>
+          </div>
         </div>
+
       </div>
-    </>
+    </div>
   );
 }
